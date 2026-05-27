@@ -26,8 +26,12 @@ struct HomeView: View {
 				content
 			} else if let error = viewModel.errorMessage {
 
-
-				Text(error).foregroundColor(.red).padding()
+				ErrorView(
+					message: error,
+					retryAction: {
+						viewModel.onAppear()
+					}
+				)
 			}
 
 		}

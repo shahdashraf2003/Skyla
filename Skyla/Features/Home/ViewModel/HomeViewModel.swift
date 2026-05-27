@@ -30,7 +30,6 @@ final class HomeViewModel: ObservableObject {
 
 	private func bindLocation() {
 		locationService.locationPublisher
-			.first()
 			.sink { [weak self] location in
 				self?.fetchWeather(
 					lat: location.coordinate.latitude,
