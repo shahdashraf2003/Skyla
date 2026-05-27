@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-
 struct TopSectionView: View {
 
 	let locationName: String
@@ -22,15 +21,8 @@ struct TopSectionView: View {
 				.font(.title)
 				.fontWeight(.semibold)
 
-			AsyncImage(url: iconURL) { image in
-				image
-					.resizable()
-					.scaledToFit()
-
-			} placeholder: {
-				ProgressView()
-			}
-			.frame(width: 100, height: 100)
+			RemoteImage(url: iconURL)
+			.frame(width: 130, height: 130)
 
 			Text(temperature)
 				.font(.system(size: 64, weight: .thin))

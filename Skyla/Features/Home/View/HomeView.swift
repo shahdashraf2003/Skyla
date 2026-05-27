@@ -65,7 +65,18 @@ struct HomeView: View {
 						.foregroundColor)
 			}
 			.padding(.bottom, 32)
+		}.refreshable {
+
+			guard let location = locationManager.location else {
+				return
+			}
+
+			viewModel.fetchWeather(
+				lat: location.coordinate.latitude,
+				lon: location.coordinate.longitude
+			)
 		}
+
 	}
 
 }

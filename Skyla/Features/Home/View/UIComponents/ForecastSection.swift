@@ -30,10 +30,8 @@ struct ForecastSection : View {
 					Text(row.label)
 						.frame(width: 110, alignment: .leading)
 
-					AsyncImage(url: row.iconURL) { image in
-						image.resizable().scaledToFit()
-					} placeholder: { Color.clear }
-						.frame(width: 40, height: 28)
+					RemoteImage(url: row.iconURL)
+						.frame(width: 50, height: 50)
 
 					Spacer()
 
