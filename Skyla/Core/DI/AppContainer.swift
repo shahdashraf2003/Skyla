@@ -25,10 +25,30 @@ final class AppContainer {
             APIClient()
         }
 
-        
+
         container.register(WeatherServiceProtocol.self) { resolver in
             let client = resolver.resolve(APIClientProtocol.self)!
             return WeatherService(apiClient: client)
         }
+
+		container.register((any LocationServiceProtocol).self){ _  in
+			LocationManager()
+		}
+
+		container.register(WeatherRepositoryProtocol.self) { resolver in
+			let weatherService = resolver.resolve(WeatherServiceProtocol.self)!
+			let locationService = resolver.resolve(
+				(any LocationServiceProtocol).self
+			)!
+			return WeatherRepository(
+				waetherService: weatherService,
+				locationService: locationService
+			)
+		}
+
+		container.register(HomeViewModel.self) { resolver in
+			let repo = resolver.resolve(WeatherRepositoryProtocol.self)!
+			return HomeViewModel(weatherRepository:repo)
+		}
     }
 }
