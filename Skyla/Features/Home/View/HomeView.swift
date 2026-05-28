@@ -5,11 +5,13 @@
 //  Created by Shahd Ashraf on 28/05/2026.
 //
 import SwiftUI
+internal import _LocationEssentials
 
 struct HomeView: View {
 
 	@StateObject var viewModel: HomeViewModel
-	
+	@StateObject private var locationManager = LocationManager()
+
 	var body: some View {
 		ZStack {
 			Image(viewModel.backgroundImageName)
@@ -29,8 +31,9 @@ struct HomeView: View {
 		}
 		.foregroundColor(viewModel.foregroundColor)
 		.onAppear {
-			viewModel.fetchWeather(lat: 30.07, lon: 31.02)
+			viewModel.onAppear()
 		}
+
 	}
 
 
@@ -44,7 +47,12 @@ struct HomeView: View {
 					conditionText: viewModel.conditionText,
 					highLowText: viewModel.todayHighLow
 				)
-				forecastSection
+				ForecastSection(
+					foregroundColor: viewModel.foregroundColor,
+					threeDayForecast: viewModel.threeDayForecast
+				
+				)
+				
 				infoGrid
 			}
 			.padding(.bottom, 32)
@@ -54,42 +62,7 @@ struct HomeView: View {
 
 
 
-		// MARK: MIDDLE — 3-Day Forecast
-	private var forecastSection: some View {
-		VStack(alignment: .leading, spacing: 12) {
-			Text("3-DAY FORECAST")
-				.font(.caption).fontWeight(.bold).opacity(0.8)
-
-			Divider().background(viewModel.foregroundColor.opacity(0.3))
-
-			ForEach(Array(viewModel.threeDayForecast.enumerated()), id: \.element.id) { index, row in
-				HStack {
-					Text(row.label)
-						.frame(width: 110, alignment: .leading)
-
-					AsyncImage(url: row.iconURL) { image in
-						image.resizable().scaledToFit()
-					} placeholder: { Color.clear }
-						.frame(width: 36, height: 36)
-
-					Spacer()
-
-					Text(row.range)
-				}
-				.font(.body)
-
-				if index < viewModel.threeDayForecast.count - 1 {
-					Divider().background(viewModel.foregroundColor.opacity(0.2))
-				}
-			}
-		}
-		.padding()
-		.background(
-			RoundedRectangle(cornerRadius: 16)
-				.fill(viewModel.foregroundColor.opacity(0.08))
-		)
-		.padding(.horizontal)
-	}
+	
 
 		// MARK: BOTTOM
 	private var infoGrid: some View {

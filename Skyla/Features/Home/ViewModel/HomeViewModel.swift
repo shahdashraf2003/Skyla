@@ -7,31 +7,59 @@
 import Foundation
 import SwiftUI
 internal import Combine
+internal import _LocationEssentials
 
 @MainActor
 final class HomeViewModel: ObservableObject {
 
-	private let weatherRepository: WeatherRepositoryProtocol
-
+	let weatherRepository: WeatherRepositoryProtocol
+	let locationService : LocationServiceProtocol
+	private var cancellables = Set<AnyCancellable>()
 	@Published private(set) var weather: WeatherResponse?
 	@Published private(set) var isLoading: Bool = false
 	@Published private(set) var errorMessage: String?
-
-	init(weatherRepository: WeatherRepositoryProtocol) {
+	init(
+		weatherRepository : WeatherRepositoryProtocol,
+		locationService: LocationServiceProtocol
+	){
 		self.weatherRepository = weatherRepository
+		self.locationService = locationService
+		bindLocation()
 	}
+
+
+	private func bindLocation() {
+		locationService.locationPublisher
+			.first()
+			.sink { [weak self] location in
+				self?.fetchWeather(
+					lat: location.coordinate.latitude,
+					lon: location.coordinate.longitude
+				)
+			}
+			.store(in: &cancellables)
+	}
+
+	func onAppear() {
+		locationService.requestLocation()
+	}
+
 
 	func fetchWeather(lat: Double, lon: Double) {
 		isLoading = true
 		errorMessage = nil
-		Task {
+		Task { [weak self] in
 			do {
-				let result = try await weatherRepository.getWeather(lat: lat, lon: lon, days: 3)
-				self.weather = result
-				self.isLoading = false
+				let result = try await self?.weatherRepository.getWeather(
+					lat: lat,
+					lon: lon,
+					days: 3
+				)
+				self?.weather = result
+				self?.isLoading = false
 			} catch {
-				self.errorMessage = error.localizedDescription
-				self.isLoading = false
+				self?.errorMessage = error.localizedDescription
+				self?.isLoading = false
 			}
 		}
 	}
@@ -66,13 +94,7 @@ final class HomeViewModel: ObservableObject {
 		return TemperatureFormatter.range(min: day.mintempC, max: day.maxtempC)
 	}
 
-	struct ForecastRow: Identifiable {
-		let id: String
-		let label: String
-		let iconURL: URL?
-		let range: String
-	}
-
+	
 	var threeDayForecast: [ForecastRow] {
 		guard let days = weather?.forecast.forecastday.prefix(3) else { return [] }
 		return days.enumerated().map { index, day in
@@ -85,12 +107,7 @@ final class HomeViewModel: ObservableObject {
 		}
 	}
 
-	struct InfoItem: Identifiable {
-		let id = UUID()
-		let title: String
-		let value: String
-	}
-
+	
 
 	var infoItems: [InfoItem] {
 		guard let c = weather?.current else { return [] }
@@ -98,8 +115,7 @@ final class HomeViewModel: ObservableObject {
 	}
 
 	private func label(forIndex index: Int) -> String {
-		return DateHelper.dayLabel(for: index)
-	}
+		return DateHelper.dayLabel(for: index)}
 
 	private func iconURL(_ icon: String?) -> URL? {
 		guard let icon else { return nil }

@@ -31,24 +31,23 @@ final class AppContainer {
             return WeatherService(apiClient: client)
         }
 
-		container.register((any LocationServiceProtocol).self){ _  in
-			LocationManager()
+		container.register(WeatherRepositoryProtocol.self) { resolver in
+			let service = resolver.resolve(WeatherServiceProtocol.self)!
+			return WeatherRepository(service:service)
 		}
 
-		container.register(WeatherRepositoryProtocol.self) { resolver in
-			let weatherService = resolver.resolve(WeatherServiceProtocol.self)!
-			let locationService = resolver.resolve(
-				(any LocationServiceProtocol).self
-			)!
-			return WeatherRepository(
-				waetherService: weatherService,
-				locationService: locationService
-			)
-		}
+
+		container.register(LocationServiceProtocol.self) { _ in
+			LocationManager()
+		}.inObjectScope(.container)
 
 		container.register(HomeViewModel.self) { resolver in
 			let repo = resolver.resolve(WeatherRepositoryProtocol.self)!
-			return HomeViewModel(weatherRepository:repo)
+			let locationService = resolver.resolve(LocationServiceProtocol.self)!
+			return HomeViewModel(
+				weatherRepository: repo,
+				locationService:  locationService
+			)
 		}
     }
 }

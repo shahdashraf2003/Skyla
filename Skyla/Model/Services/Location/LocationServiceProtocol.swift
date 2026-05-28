@@ -7,10 +7,10 @@
 
 
 import CoreLocation
+internal import Combine
 
-protocol LocationServiceProtocol: ObservableObject {
-
-    var location: CLLocation? { get }
-
-    func requestLocation()
+protocol LocationServiceProtocol: AnyObject {
+	var location: CLLocation? { get }
+	var locationPublisher: AnyPublisher<CLLocation, Never> { get }
+	func requestLocation()
 }

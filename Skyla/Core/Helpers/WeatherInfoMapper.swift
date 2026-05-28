@@ -8,7 +8,7 @@
 
 struct WeatherInfoMapper {
 
-    static func map(from current: CurrentWeather) -> [HomeViewModel.InfoItem] {
+    static func map(from current: CurrentWeather) -> [InfoItem] {
         [
             .init(title: "VISIBILITY", value: "\(Int(current.visKm)) km"),
             .init(title: "HUMIDITY", value: "\(current.humidity)%"),

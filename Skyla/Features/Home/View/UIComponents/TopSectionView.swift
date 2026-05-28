@@ -18,7 +18,6 @@ struct TopSectionView: View {
 	var body: some View {
 
 		VStack(spacing: 8) {
-
 			Text(locationName)
 				.font(.title)
 				.fontWeight(.semibold)

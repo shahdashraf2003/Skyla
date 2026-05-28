@@ -11,19 +11,13 @@ protocol WeatherRepositoryProtocol {
 
 final class WeatherRepository: WeatherRepositoryProtocol {
 
-    private let waetherService: WeatherServiceProtocol
+    private let service: WeatherServiceProtocol
 
-	private let locationService :  any LocationServiceProtocol
-
-	init(
-		waetherService: WeatherServiceProtocol,
-		locationService:  any LocationServiceProtocol
-	) {
-        self.waetherService = waetherService
-		self.locationService = locationService
+    init(service: WeatherServiceProtocol) {
+        self.service = service
     }
 
     func getWeather(lat: Double, lon: Double, days: Int) async throws -> WeatherResponse {
-        return try await waetherService.getForecast(lat: lat, lon: lon, days: days)
+        return try await service.getForecast(lat: lat, lon: lon, days: days)
     }
 }

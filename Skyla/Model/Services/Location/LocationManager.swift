@@ -10,57 +10,85 @@ import Foundation
 import CoreLocation
 internal import Combine
 
-final class LocationManager: NSObject,
-                             ObservableObject,
-                             LocationServiceProtocol {
+final class LocationManager: NSObject, ObservableObject, LocationServiceProtocol {
 
-    private let manager = CLLocationManager()
+	private let manager = CLLocationManager()
+	private let locationSubject = PassthroughSubject<CLLocation, Never>()
 
-    @Published var location: CLLocation?
+	@Published var location: CLLocation?
+	@Published var authorizationStatus: CLAuthorizationStatus = .notDetermined
 
-    override init() {
-        super.init()
+	var locationPublisher: AnyPublisher<CLLocation, Never> {
+		locationSubject.eraseToAnyPublisher()
+	}
 
-        manager.delegate = self
-        manager.desiredAccuracy = kCLLocationAccuracyBest
-    }
+	override init() {
+		super.init()
+		manager.delegate = self
+		manager.desiredAccuracy = kCLLocationAccuracyBest
+		authorizationStatus = manager.authorizationStatus
+	}
 
-    func requestLocation() {
+	func requestLocation() {
+		switch manager.authorizationStatus {
+			case .notDetermined:
+					
+				manager.requestWhenInUseAuthorization()
 
-        switch manager.authorizationStatus {
+			case .authorizedWhenInUse, .authorizedAlways:
+				manager.requestLocation()
 
-        case .notDetermined:
-            manager.requestWhenInUseAuthorization()
+			case .denied, .restricted:
+				print("Location access denied")
 
-        case .authorizedWhenInUse, .authorizedAlways:
-            manager.requestLocation()
-
-        default:
-            print("Location permission denied")
-        }
-    }
+			@unknown default:
+				break
+		}
+	}
 }
 
 extension LocationManager: CLLocationManagerDelegate {
 
-    func locationManager(_ manager: CLLocationManager,
-                         didUpdateLocations locations: [CLLocation]) {
+	func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+		authorizationStatus = manager.authorizationStatus
 
-        location = locations.first
-    }
+		switch manager.authorizationStatus {
+			case .authorizedWhenInUse, .authorizedAlways:
 
-    func locationManager(_ manager: CLLocationManager,
-                         didFailWithError error: Error) {
+				manager.requestLocation()
 
-        print("Location Error:", error.localizedDescription)
-    }
+			case .denied, .restricted:
+				print("Location access denied")
 
-    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+			case .notDetermined:
+				break
 
-        if manager.authorizationStatus == .authorizedWhenInUse ||
-            manager.authorizationStatus == .authorizedAlways {
+			@unknown default:
+				break
+		}
+	}
 
-            manager.requestLocation()
-        }
-    }
+	func locationManager(_ manager: CLLocationManager,
+						 didUpdateLocations locations: [CLLocation]) {
+		guard let location = locations.first else { return }
+		self.location = location
+		locationSubject.send(location)
+	}
+
+	func locationManager(_ manager: CLLocationManager,
+						 didFailWithError error: Error) {
+		guard let clError = error as? CLError else { return }
+
+		switch clError.code {
+			case .denied:
+				print("Location denied by user")
+			case .locationUnknown:
+
+				DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+					self.manager.requestLocation()
+				}
+			default:
+				print("Location error:", error.localizedDescription)
+		}
+	}
 }
