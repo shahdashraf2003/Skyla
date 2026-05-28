@@ -15,9 +15,13 @@ struct ForecastSection : View {
 
 	var  body  : some View {
 
-		VStack(alignment: .leading, spacing: 12) {
+		VStack(alignment: .leading,spacing: 12) {
+
 			Text("3-DAY FORECAST")
-				.font(.caption).fontWeight(.bold).opacity(0.8)
+				.font(.caption)
+				.fontWeight(.bold)
+				.opacity(0.8)
+				.padding()
 
 			Divider().background(foregroundColor.opacity(0.3))
 
@@ -29,24 +33,26 @@ struct ForecastSection : View {
 					AsyncImage(url: row.iconURL) { image in
 						image.resizable().scaledToFit()
 					} placeholder: { Color.clear }
-						.frame(width: 36, height: 36)
+						.frame(width: 40, height: 28)
 
 					Spacer()
 
 					Text(row.range)
 				}
 				.font(.body)
+				.padding()
 
 				if index < threeDayForecast.count - 1 {
 					Divider().background(foregroundColor.opacity(0.2))
 				}
 			}
 		}
-		.padding()
+
 		.background(
 			RoundedRectangle(cornerRadius: 16)
 				.fill(foregroundColor.opacity(0.08))
 		)
-		.padding(.horizontal)
+		.padding(.horizontal,65)
+
 	}
 }
