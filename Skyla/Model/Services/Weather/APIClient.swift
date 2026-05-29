@@ -47,6 +47,7 @@ final class APIClient: APIClientProtocol {
 
 			let cachedResponse = CachedURLResponse(response: response, data: data)
 			cache.storeCachedResponse(cachedResponse, for: urlRequest)
+			print("api")
 			return try (JSONDecoder().decode(T.self, from: data),false)
 
 		} catch {
@@ -55,6 +56,7 @@ final class APIClient: APIClientProtocol {
 				urlError.code == .networkConnectionLost {
 
 				if let cached = cache.cachedResponse(for: urlRequest) {
+					print("cashed")
 					return try (JSONDecoder().decode(T.self, from: cached.data),true)
 				}
 

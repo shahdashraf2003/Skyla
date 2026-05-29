@@ -37,10 +37,14 @@ final class HomeViewModel: ObservableObject {
 		bindAuthorization()
 	}
 
-
 	private func bindLocation() {
 		locationService.locationPublisher
+			.receive(on: DispatchQueue.main)
 			.sink { [weak self] location in
+
+				self?.lastLat = location.coordinate.latitude
+				self?.lastLon = location.coordinate.longitude
+
 				self?.fetchWeather(
 					lat: location.coordinate.latitude,
 					lon: location.coordinate.longitude
@@ -48,6 +52,7 @@ final class HomeViewModel: ObservableObject {
 			}
 			.store(in: &cancellables)
 	}
+
 	func checkLocationPermission() {
 
 		if locationService.authorizationDenied {
@@ -91,57 +96,41 @@ final class HomeViewModel: ObservableObject {
 	}
 
 	func fetchWeather(lat: Double, lon: Double) {
-
-		lastLat = lat
-		lastLon = lon
 		state = .loading
 
 		Task {
 			do {
-				let result = try await self.weatherRepository.getWeather(
+				let result = try await weatherRepository.getWeather(
 					lat: lat,
 					lon: lon,
 					days: 3
 				)
 
-				if result.0.forecast.forecastday.isEmpty{
-					self.state = .empty
+				guard !result.0.forecast.forecastday.isEmpty else {
+					state = .empty
 					return
 				}
 
-				self.weather = result.0
-				self.isShowingCachedData = result.1
-				self.state = .loaded
+				weather = result.0
+				isShowingCachedData = result.1
+				state = .loaded
 
 			} catch {
-				self.state = .error(error.localizedDescription)
+				state = .error(error.localizedDescription)
 			}
 		}
 	}
 
-
-	func refresh() async {
-
-		guard let lat = lastLat,
-			  let lon = lastLon else { return }
-		state = .loading
-		do {
-
-			let result = try await weatherRepository.getWeather(
-				lat: lat,
-				lon: lon,
-				days: 3
-			)
-			weather = result.0
-			isShowingCachedData = result.1
-			state = .loaded
-
-		} catch {
-
-			state = .error(error.localizedDescription)
+	func refresh() {
+		if !isConnected {
+			isShowingCachedData = true
+			return
 		}
+
+		locationService.requestLocation()
 		print("refreshing")
 	}
+
 
 	private func bindNetwork() {
 		networkMonitor.$isConnected
