@@ -8,11 +8,12 @@
 
 import SwiftUI
 
+
 struct ErrorView: View {
     
     let message: String
-    let retryAction: () -> Void
-    
+	let retryAction : ()->  Void
+
     var body: some View {
         VStack(spacing: 16) {
 			Text("")
@@ -31,7 +32,7 @@ struct ErrorView: View {
                 .opacity(0.8)
             
             Button("Retry") {
-                retryAction()
+               retryAction()
             }
             .padding()
             .background(.white.opacity(0.9))

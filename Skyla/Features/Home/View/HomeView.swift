@@ -10,42 +10,42 @@ internal import _LocationEssentials
 struct HomeView: View {
 
 	@StateObject var viewModel: HomeViewModel
-	@StateObject private var locationManager = LocationManager()
 
 	var body: some View {
-
 		ZStack {
 			Image(viewModel.backgroundImageName)
 				.resizable()
 				.scaledToFill()
 				.ignoresSafeArea()
 
-			if viewModel.isLoading {
-				ProgressView().tint(viewModel.foregroundColor)
+			if viewModel.isLoading && viewModel.weather == nil {
+				ProgressView()
+					.tint(viewModel.foregroundColor)
 			} else if viewModel.weather != nil {
 				content
 			} else if let error = viewModel.errorMessage {
-
 				ErrorView(
 					message: error,
-					retryAction: {
-						viewModel.onAppear()
-					}
+					retryAction: {  viewModel.onAppear() }
 				)
 			}
-
 		}
 		.foregroundColor(viewModel.foregroundColor)
 		.onAppear {
 			viewModel.onAppear()
 		}
-
 	}
 
 
 	private var content: some View {
 		ScrollView {
 			VStack(spacing: 24) {
+
+				if viewModel.isShowingCachedData {
+					CachedBannerView()
+						.transition(.move(edge: .top).combined(with: .opacity))
+				}
+
 				TopSectionView(
 					locationName: viewModel.locationName,
 					iconURL: viewModel.currentConditionIconURL,
@@ -53,30 +53,19 @@ struct HomeView: View {
 					conditionText: viewModel.conditionText,
 					highLowText: viewModel.todayHighLow
 				)
+
 				ForecastSection(
 					foregroundColor: viewModel.foregroundColor,
 					threeDayForecast: viewModel.threeDayForecast
-
 				)
 
 				infoGrid(
 					infoItems: viewModel.infoItems,
-					foregroundColor: viewModel
-						.foregroundColor)
-			}
-			.padding(.bottom, 32)
+					foregroundColor: viewModel.foregroundColor
+				)
+			}.animation(.easeInOut, value: viewModel.isConnected).padding(.bottom, 32)
 		}.refreshable {
-
-			guard let location = locationManager.location else {
-				return
-			}
-
-			viewModel.fetchWeather(
-				lat: location.coordinate.latitude,
-				lon: location.coordinate.longitude
-			)
+			await viewModel.refresh()
 		}
-
 	}
-
 }

@@ -13,23 +13,34 @@ internal import _LocationEssentials
 final class HomeViewModel: ObservableObject {
 
 	let weatherRepository: WeatherRepositoryProtocol
-	let locationService : LocationServiceProtocol
+	let locationService: LocationServiceProtocol
 	private var cancellables = Set<AnyCancellable>()
+
 	@Published private(set) var weather: WeatherResponse?
 	@Published private(set) var isLoading: Bool = false
 	@Published private(set) var errorMessage: String?
+	@Published private(set) var isConnected = true
+	@Published private(set) var isShowingCachedData = true
+
+	private var lastLat: Double?
+	private var lastLon: Double?
+
+	private let networkMonitor = NetworkMonitor.shared
+
 	init(
-		weatherRepository : WeatherRepositoryProtocol,
+		weatherRepository: WeatherRepositoryProtocol,
 		locationService: LocationServiceProtocol
-	){
+	) {
 		self.weatherRepository = weatherRepository
 		self.locationService = locationService
 		bindLocation()
+		bindNetwork()
 	}
 
 
 	private func bindLocation() {
 		locationService.locationPublisher
+			.first()
 			.sink { [weak self] location in
 				self?.fetchWeather(
 					lat: location.coordinate.latitude,
@@ -39,28 +50,90 @@ final class HomeViewModel: ObservableObject {
 			.store(in: &cancellables)
 	}
 
+	
+
 	func onAppear() {
-		locationService.requestLocation()
+		if let lat = lastLat, let lon = lastLon {
+			fetchWeather(lat: lat, lon: lon)
+		} else {
+			locationService.requestLocation()
+		}
 	}
 
 
 	func fetchWeather(lat: Double, lon: Double) {
+		lastLat = lat
+		lastLon = lon
 		isLoading = true
 		errorMessage = nil
-		Task { [weak self] in
+
+		Task {
 			do {
-				let result = try await self?.weatherRepository.getWeather(
-					lat: lat,
-					lon: lon,
-					days: 3
+				let result = try await self.weatherRepository.getWeather(
+					lat: lat, lon: lon, days: 3
 				)
-				self?.weather = result
-				self?.isLoading = false
+				self.weather = result.0
+				self.isShowingCachedData = result.1
+				self.isLoading = false
 			} catch {
-				self?.errorMessage = error.localizedDescription
-				self?.isLoading = false
+				self.errorMessage = error.localizedDescription
+				self.isLoading = false
 			}
 		}
+	}
+
+
+	func refresh() async {
+		
+		guard let lat = lastLat, let lon = lastLon else { return }
+
+		isLoading = true
+		errorMessage = nil
+
+		do {
+			let result = try await Task {
+				try await self.weatherRepository.getWeather(
+					lat: lat, lon: lon, days: 3
+				)
+			}.value
+
+			self.weather = result.0
+			self.isShowingCachedData = result.1
+			self.isLoading = false
+
+		} catch is CancellationError {
+			self.isLoading = false
+			self.isShowingCachedData = true
+
+		} catch let urlError as URLError where urlError.code == .cancelled {
+			self.isLoading = false
+			self.isShowingCachedData = true
+
+		} catch {
+			self.errorMessage = error.localizedDescription
+			self.isLoading = false
+			self.isShowingCachedData = true
+		}
+		print("refreshing")
+	}
+
+
+	private func bindNetwork() {
+		networkMonitor.$isConnected
+			.receive(on: DispatchQueue.main)
+			.removeDuplicates()
+			.sink { [weak self] connected in
+				guard let self else { return }
+				self.isConnected = connected
+
+				if connected {
+					if self.weather == nil,
+					   let lat = self.lastLat, let lon = self.lastLon {
+						self.fetchWeather(lat: lat, lon: lon)
+					}
+				}
+			}
+			.store(in: &cancellables)
 	}
 
 	var theme: WeatherTheme {
@@ -84,16 +157,13 @@ final class HomeViewModel: ObservableObject {
 		return TemperatureFormatter.format(t)
 	}
 
-	var conditionText: String { weather?.current.condition.text ?? "--"  }
-
-
+	var conditionText: String { weather?.current.condition.text ?? "--" }
 
 	var todayHighLow: String {
-		guard let day = weather?.forecast.forecastday.first?.day else { return "--"  }
+		guard let day = weather?.forecast.forecastday.first?.day else { return "--" }
 		return TemperatureFormatter.range(min: day.mintempC, max: day.maxtempC)
 	}
 
-	
 	var threeDayForecast: [ForecastRow] {
 		guard let days = weather?.forecast.forecastday.prefix(3) else { return [] }
 		return days.enumerated().map { index, day in
@@ -106,15 +176,15 @@ final class HomeViewModel: ObservableObject {
 		}
 	}
 
-	
-
 	var infoItems: [InfoItem] {
 		guard let c = weather?.current else { return [] }
-		 return WeatherInfoMapper.map(from: c)
+		return WeatherInfoMapper.map(from: c)
 	}
 
+
 	private func label(forIndex index: Int) -> String {
-		return DateHelper.dayLabel(for: index)}
+		DateHelper.dayLabel(for: index)
+	}
 
 	private func iconURL(_ icon: String?) -> URL? {
 		guard let icon else { return nil }

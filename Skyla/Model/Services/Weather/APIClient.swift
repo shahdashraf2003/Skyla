@@ -1,5 +1,5 @@
 //
-//  APIClientProtocol.swift
+//  APIClient.swift
 //  Skyla
 //
 //  Created by Shahd Ashraf on 28/05/2026.
@@ -9,45 +9,55 @@
 import Foundation
 
 protocol APIClientProtocol {
-    func request<T: Codable>(_ endpoint: Endpoint) async throws -> T
+	func request<T: Codable>(_ endpoint: Endpoint) async throws -> (T,Bool)
 }
-
 
 final class APIClient: APIClientProtocol {
 
 	private let session: URLSession
+	private let cache: URLCache
 
 	init() {
-
-		let config = URLSessionConfiguration.default
-
-		config.requestCachePolicy = .returnCacheDataElseLoad
-
-		config.urlCache = URLCache(
+		let cache = URLCache(
 			memoryCapacity: 50 * 1024 * 1024,
 			diskCapacity: 100 * 1024 * 1024
 		)
 
+		let config = URLSessionConfiguration.default
+		config.urlCache = cache
+		config.requestCachePolicy = .reloadIgnoringLocalCacheData
+
+		self.cache = cache
 		self.session = URLSession(configuration: config)
 	}
 
-	func request<T: Codable>(_ endpoint: Endpoint) async throws -> T {
+	func request<T: Codable>(_ endpoint: Endpoint) async throws -> (T ,Bool){
 		guard let url = endpoint.url else { throw NetworkError.invalidURL }
+
+		let urlRequest = URLRequest(url: url)
+
 		do {
-			let (data, response) = try await session.data(from: url)
+			let (data, response) = try await session.data(for: urlRequest)
 
 			guard let httpResponse = response as? HTTPURLResponse,
 				  200..<300 ~= httpResponse.statusCode else {
 				throw NetworkError.requestFailed
 			}
 
-			let decoded = try JSONDecoder().decode(T.self, from: data)
-			return decoded
-		}
-		catch {
-			if let urlError = error as?
-				URLError, urlError.code == .notConnectedToInternet
-			{
+			let cachedResponse = CachedURLResponse(response: response, data: data)
+			cache.storeCachedResponse(cachedResponse, for: urlRequest)
+			return try (JSONDecoder().decode(T.self, from: data),false)
+
+		} catch {
+			if let urlError = error as? URLError,
+			   urlError.code == .notConnectedToInternet ||
+				urlError.code == .networkConnectionLost {
+
+				if let cached = cache.cachedResponse(for: urlRequest) {
+					return try (JSONDecoder().decode(T.self, from: cached.data),true)
+				}
+
+
 				throw NetworkError.noInternet
 			}
 			throw error
