@@ -51,17 +51,22 @@ final class APIClient: APIClientProtocol {
 			return try (JSONDecoder().decode(T.self, from: data),false)
 
 		} catch {
-			if let urlError = error as? URLError,
-			   urlError.code == .notConnectedToInternet ||
-				urlError.code == .networkConnectionLost {
+			if let urlError = error as? URLError {
+				switch urlError.code {
+					case .notConnectedToInternet,
+							.cannotFindHost,
+							.dnsLookupFailed,
+							.networkConnectionLost:
+						if let cached = cache.cachedResponse(for: urlRequest) {
+							print("cashed")
+							return try (JSONDecoder().decode(T.self, from: cached.data),true)
+						}
 
-				if let cached = cache.cachedResponse(for: urlRequest) {
-					print("cashed")
-					return try (JSONDecoder().decode(T.self, from: cached.data),true)
+
+						throw NetworkError.noInternet
+					default:
+						throw error
 				}
-
-
-				throw NetworkError.noInternet
 			}
 			throw error
 		}
