@@ -17,16 +17,24 @@ final class LocationManager: NSObject, ObservableObject, LocationServiceProtocol
 
 	@Published var location: CLLocation?
 	@Published var authorizationStatus: CLAuthorizationStatus = .notDetermined
+	@Published var authorizationDenied = false
 
 	var locationPublisher: AnyPublisher<CLLocation, Never> {
 		locationSubject.eraseToAnyPublisher()
 	}
+
+	var authorizationStatusPublisher: Published<Bool>.Publisher {
+		$authorizationDenied
+	}
+
+
 
 	override init() {
 		super.init()
 		manager.delegate = self
 		manager.desiredAccuracy = kCLLocationAccuracyBest
 		authorizationStatus = manager.authorizationStatus
+		checkAuthorization()
 	}
 
 	func requestLocation() {
@@ -45,28 +53,29 @@ final class LocationManager: NSObject, ObservableObject, LocationServiceProtocol
 				break
 		}
 	}
+
+	private func checkAuthorization() {
+
+		switch manager.authorizationStatus {
+
+			case .denied, .restricted:
+				authorizationDenied = true
+
+			default:
+				authorizationDenied = false
+		}
+	}
+
+	func locationManagerDidChangeAuthorization(
+		_ manager: CLLocationManager
+	) {
+		checkAuthorization()
+	}
 }
 
 extension LocationManager: CLLocationManagerDelegate {
 
-	func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-		authorizationStatus = manager.authorizationStatus
-
-		switch manager.authorizationStatus {
-			case .authorizedWhenInUse, .authorizedAlways:
-
-				manager.requestLocation()
-
-			case .denied, .restricted:
-				print("Location access denied")
-
-			case .notDetermined:
-				break
-
-			@unknown default:
-				break
-		}
-	}
+	
 
 	func locationManager(_ manager: CLLocationManager,
 						 didUpdateLocations locations: [CLLocation]) {

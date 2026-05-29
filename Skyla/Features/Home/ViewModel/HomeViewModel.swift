@@ -17,8 +17,7 @@ final class HomeViewModel: ObservableObject {
 	private var cancellables = Set<AnyCancellable>()
 
 	@Published private(set) var weather: WeatherResponse?
-	@Published private(set) var isLoading: Bool = false
-	@Published private(set) var errorMessage: String?
+	@Published var state: ViewState = .loading
 	@Published private(set) var isConnected = true
 	@Published private(set) var isShowingCachedData = true
 
@@ -35,12 +34,12 @@ final class HomeViewModel: ObservableObject {
 		self.locationService = locationService
 		bindLocation()
 		bindNetwork()
+		bindAuthorization()
 	}
 
 
 	private func bindLocation() {
 		locationService.locationPublisher
-			.first()
 			.sink { [weak self] location in
 				self?.fetchWeather(
 					lat: location.coordinate.latitude,
@@ -49,74 +48,100 @@ final class HomeViewModel: ObservableObject {
 			}
 			.store(in: &cancellables)
 	}
+	func checkLocationPermission() {
+
+		if locationService.authorizationDenied {
+
+			state = .locationDenied
+
+		} else {
+
+			locationService.requestLocation()
+		}
+	}
+	private func bindAuthorization() {
+
+		locationService.authorizationStatusPublisher
+			.receive(on: DispatchQueue.main)
+			.sink { [weak self] denied in
+
+				if denied {
+					self?.state = .locationDenied
+				}
+			}
+			.store(in: &cancellables)
+	}
 
 	
 
 	func onAppear() {
-		if let lat = lastLat, let lon = lastLon {
+
+		if locationService.authorizationDenied {
+			state = .locationDenied
+			return
+		}
+
+		if let lat = lastLat,
+		   let lon = lastLon {
 			fetchWeather(lat: lat, lon: lon)
+
 		} else {
 			locationService.requestLocation()
 		}
 	}
 
-
 	func fetchWeather(lat: Double, lon: Double) {
+
 		lastLat = lat
 		lastLon = lon
-		isLoading = true
-		errorMessage = nil
+		state = .loading
 
 		Task {
 			do {
 				let result = try await self.weatherRepository.getWeather(
-					lat: lat, lon: lon, days: 3
+					lat: lat,
+					lon: lon,
+					days: 3
 				)
+
+				if result.0.forecast.forecastday.isEmpty{
+					self.state = .empty
+					return
+				}
+
 				self.weather = result.0
 				self.isShowingCachedData = result.1
-				self.isLoading = false
+				self.state = .loaded
+
 			} catch {
-				self.errorMessage = error.localizedDescription
-				self.isLoading = false
+				self.state = .error(error.localizedDescription)
 			}
 		}
 	}
 
 
 	func refresh() async {
-		
-		guard let lat = lastLat, let lon = lastLon else { return }
 
-		isLoading = true
-		errorMessage = nil
-
+		guard let lat = lastLat,
+			  let lon = lastLon else { return }
+		state = .loading
 		do {
-			let result = try await Task {
-				try await self.weatherRepository.getWeather(
-					lat: lat, lon: lon, days: 3
-				)
-			}.value
 
-			self.weather = result.0
-			self.isShowingCachedData = result.1
-			self.isLoading = false
-
-		} catch is CancellationError {
-			self.isLoading = false
-			self.isShowingCachedData = true
-
-		} catch let urlError as URLError where urlError.code == .cancelled {
-			self.isLoading = false
-			self.isShowingCachedData = true
+			let result = try await weatherRepository.getWeather(
+				lat: lat,
+				lon: lon,
+				days: 3
+			)
+			weather = result.0
+			isShowingCachedData = result.1
+			state = .loaded
 
 		} catch {
-			self.errorMessage = error.localizedDescription
-			self.isLoading = false
-			self.isShowingCachedData = true
+
+			state = .error(error.localizedDescription)
 		}
 		print("refreshing")
 	}
-
 
 	private func bindNetwork() {
 		networkMonitor.$isConnected

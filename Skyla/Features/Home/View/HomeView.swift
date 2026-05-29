@@ -10,7 +10,7 @@ internal import _LocationEssentials
 struct HomeView: View {
 
 	@StateObject var viewModel: HomeViewModel
-
+	@Environment(\.scenePhase) private var scenePhase
 	var body: some View {
 		ZStack {
 			Image(viewModel.backgroundImageName)
@@ -18,22 +18,45 @@ struct HomeView: View {
 				.scaledToFill()
 				.ignoresSafeArea()
 
-			if viewModel.isLoading && viewModel.weather == nil {
-				ProgressView()
-					.tint(viewModel.foregroundColor)
-			} else if viewModel.weather != nil {
-				content
-			} else if let error = viewModel.errorMessage {
-				ErrorView(
-					message: error,
-					retryAction: {  viewModel.onAppear() }
-				)
+			switch viewModel.state {
+				case .loading:
+					ProgressView()
+
+				case .loaded:
+					content
+				case .empty:
+					EmptyStateView()
+
+				case .locationDenied:
+					PermissionDeniedView(
+						openSettingsAction: {
+							guard let url = URL(
+								string: UIApplication.openSettingsURLString
+							) else { return }
+
+							UIApplication.shared.open(url)
+						}
+					)
+
+				case .error(let message):
+					ErrorView(
+						message: message,
+						retryAction: {
+							viewModel.onAppear()
+						}
+					)
+
 			}
 		}
 		.foregroundColor(viewModel.foregroundColor)
 		.onAppear {
 			viewModel.onAppear()
+		}.onChange(of: scenePhase){
+			if scenePhase == .active {
+				viewModel.checkLocationPermission()
+			}
 		}
+
 	}
 
 

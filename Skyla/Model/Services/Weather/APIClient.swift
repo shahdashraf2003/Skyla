@@ -18,6 +18,7 @@ final class APIClient: APIClientProtocol {
 	private let cache: URLCache
 
 	init() {
+		
 		let cache = URLCache(
 			memoryCapacity: 50 * 1024 * 1024,
 			diskCapacity: 100 * 1024 * 1024
