@@ -11,6 +11,9 @@ import SwiftUI
 struct infoGrid:  View {
 	let infoItems : [InfoItem]
 	let foregroundColor : Color
+	var horizontalPadding: CGFloat {
+		foregroundColor == .black ? 45 : 80
+	}
 	var body : some View{
 		LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
 			ForEach(infoItems) { item in
@@ -19,7 +22,7 @@ struct infoGrid:  View {
 						 foreground: foregroundColor)
 			}
 		}
-		.padding(.horizontal,65)
+		.padding(.horizontal,horizontalPadding)
 	}
 
 }

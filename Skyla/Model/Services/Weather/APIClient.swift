@@ -17,19 +17,10 @@ final class APIClient: APIClientProtocol {
 	private let session: URLSession
 	private let cache: URLCache
 
-	init() {
-		
-		let cache = URLCache(
-			memoryCapacity: 50 * 1024 * 1024,
-			diskCapacity: 100 * 1024 * 1024
-		)
-
-		let config = URLSessionConfiguration.default
-		config.urlCache = cache
-		config.requestCachePolicy = .reloadIgnoringLocalCacheData
+	init(session :URLSession , cache:URLCache) {
 
 		self.cache = cache
-		self.session = URLSession(configuration: config)
+		self.session = session
 	}
 
 	func request<T: Codable>(_ endpoint: Endpoint) async throws -> (T ,Bool){
