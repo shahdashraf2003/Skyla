@@ -7,7 +7,7 @@
 import Foundation
 
 protocol WeatherServiceProtocol {
-	func getForecast(lat: Double, lon: Double, days: Int) async throws -> WeatherResponse
+	func getForecast(lat: Double, lon: Double, days: Int) async throws -> (WeatherResponse,Bool)
 }
 
 
@@ -20,7 +20,7 @@ final class WeatherService: WeatherServiceProtocol {
         self.apiClient = apiClient
     }
 
-    func getForecast(lat: Double, lon: Double, days: Int) async throws -> WeatherResponse {
+    func getForecast(lat: Double, lon: Double, days: Int) async throws -> (WeatherResponse,Bool) {
         return try await apiClient.request(.forecast(lat: lat, lon: lon, days: days))
     }
 }

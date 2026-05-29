@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SwiftData
+import Swinject
 
 @main
 struct SkylaApp: App {
@@ -25,7 +26,9 @@ struct SkylaApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+			HomeView(
+				viewModel: AppContainer.shared.container.resolve(HomeViewModel.self)!
+			)
         }
         .modelContainer(sharedModelContainer)
     }

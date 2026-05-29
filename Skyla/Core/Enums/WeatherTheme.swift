@@ -14,7 +14,7 @@ enum WeatherTheme {
     var backgroundImage: String {
         switch self {
         case .day:
-            return "morning"
+            return "day"
         case .night:
             return "night"
         }
