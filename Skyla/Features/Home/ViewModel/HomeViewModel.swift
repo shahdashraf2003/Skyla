@@ -5,8 +5,7 @@
 //  Created by Shahd Ashraf on 28/05/2026.
 //
 import Foundation
-import SwiftUI
-internal import Combine
+import Combine
 internal import _LocationEssentials
 
 @MainActor
@@ -22,6 +21,8 @@ final class HomeViewModel: ObservableObject {
 	@Published var state: ViewState = .loading
 	@Published private(set) var isConnected = true
 	@Published private(set) var isShowingCachedData = false
+
+	@Published var selectedDay: ForecastDay?
 
 	init(
 		weatherRepository: WeatherRepositoryProtocol,
@@ -161,9 +162,6 @@ final class HomeViewModel: ObservableObject {
 		theme.backgroundImage
 	}
 
-	var foregroundColor: Color {
-		theme == .day ? .black : .white
-	}
 
 	var locationName: String {
 		weather?.location.name ?? ""
@@ -205,14 +203,17 @@ final class HomeViewModel: ObservableObject {
 		}
 
 		return days.enumerated().map { index, day in
-
 			ForecastRow(
 				id: day.id,
 				label: label(forIndex: index),
 				iconURL: makeIconURL(from: day.day.condition.icon),
-				range: "\(Int(day.day.mintempC))° - \(Int(day.day.maxtempC))°"
+				range: "\(Int(day.day.mintempC))° - \(Int(day.day.maxtempC))°",
+				day: day
 			)
 		}
+	}
+	func selectDay(_ row: ForecastRow) {
+		selectedDay = row.day
 	}
 
 	var infoItems: [InfoItem] {

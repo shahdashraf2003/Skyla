@@ -8,7 +8,7 @@
 
 import Network
 import Foundation
-internal import Combine
+import Combine
 
 final class NetworkMonitor: ObservableObject {
 

@@ -10,53 +10,63 @@ internal import _LocationEssentials
 struct HomeView: View {
 
 	@StateObject var viewModel: HomeViewModel
+	var foregroundColor: Color {
+		viewModel.theme == .day ? .black : .white
+	}
+
 	@Environment(\.scenePhase) private var scenePhase
 	var body: some View {
-		ZStack {
-			Image(viewModel.backgroundImageName)
-				.resizable()
-				.scaledToFill()
-				.ignoresSafeArea()
+		NavigationStack {
+			ZStack {
+				Image(viewModel.backgroundImageName)
+					.resizable()
+					.scaledToFill()
+					.ignoresSafeArea()
 
-			switch viewModel.state {
-				case .loading:
-					ProgressView()
+				switch viewModel.state {
 
-				case .loaded:
-					content
-				case .empty:
-					EmptyStateView()
+					case .loading:
+						ProgressView()
 
-				case .locationDenied:
-					PermissionDeniedView(
-						openSettingsAction: {
-							guard let url = URL(
-								string: UIApplication.openSettingsURLString
-							) else { return }
+					case .loaded:
+						content
 
-							UIApplication.shared.open(url)
-						}
-					)
+					case .empty:
+						EmptyStateView()
 
-				case .error(let message):
-					ErrorView(
-						message: message,
-						retryAction: {
-							viewModel.onAppear()
-						}
-					)
+					case .locationDenied:
+						PermissionDeniedView(
+							openSettingsAction: {
+								guard let url = URL(
+									string: UIApplication.openSettingsURLString
+								) else { return }
+								UIApplication.shared.open(url)
+							}
+						)
 
+					case .error(let message):
+						ErrorView(
+							message: message,
+							retryAction: {
+								viewModel.onAppear()
+							}
+						)
+				}
+			}
+			.foregroundColor(foregroundColor)
+			.onAppear {
+				viewModel.onAppear()
+			}
+			.onChange(of: scenePhase) { phase in
+				if phase == .active {
+					viewModel.checkLocationPermission()
+				}
+			}.navigationDestination(item: $viewModel.selectedDay) { day in
+				DayDetailsView(
+					viewModel: DayDetailsViewModel(day: day)
+				)
 			}
 		}
-		.foregroundColor(viewModel.foregroundColor)
-		.onAppear {
-			viewModel.onAppear()
-		}.onChange(of: scenePhase){
-			if scenePhase == .active {
-				viewModel.checkLocationPermission()
-			}
-		}
-
 	}
 
 
@@ -78,17 +88,23 @@ struct HomeView: View {
 				)
 
 				ForecastSection(
-					foregroundColor: viewModel.foregroundColor,
-					threeDayForecast: viewModel.threeDayForecast
+					foregroundColor: foregroundColor,
+					threeDayForecast: viewModel.threeDayForecast,
+					onSelectDay: { day in
+						viewModel.selectedDay = day.day
+					}
 				)
 
 				infoGrid(
 					infoItems: viewModel.infoItems,
-					foregroundColor: viewModel.foregroundColor
+					foregroundColor: foregroundColor
 				)
-			}.animation(.easeInOut, value: viewModel.isConnected).padding(.bottom, 32)
-		}.refreshable {
-			 viewModel.refresh()
+			}
+			.animation(.easeInOut, value: viewModel.isConnected)
+			.padding(.bottom, 32)
+		}
+		.refreshable {
+			viewModel.refresh()
 		}
 	}
 }
