@@ -15,7 +15,6 @@ struct RemoteImage: View {
 	var body: some View {
 
 		KFImage(url)
-
 			.placeholder {Image(.weather).resizable()}
 			.retry(maxCount: 3, interval: .seconds(2))
 			.fade(duration: 0.25)

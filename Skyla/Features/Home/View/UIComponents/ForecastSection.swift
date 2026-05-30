@@ -12,10 +12,12 @@ struct ForecastSection : View {
 
 	var foregroundColor : Color
 	var threeDayForecast : [ForecastRow]
-
+	var horizontalPadding: CGFloat {
+		foregroundColor == .black ? 45 : 80
+	}
 	var  body  : some View {
 
-		VStack(alignment: .leading,spacing: 12) {
+		VStack(alignment: .leading,spacing: 6) {
 
 			Text("3-DAY FORECAST")
 				.font(.caption)
@@ -25,16 +27,17 @@ struct ForecastSection : View {
 
 			Divider().background(foregroundColor.opacity(0.3))
 
-			ForEach(Array(threeDayForecast.enumerated()), id: \.element.id) { index, row in
+			ForEach(
+				Array(threeDayForecast.enumerated()),
+				id: \.element.id
+			) { index, row in
 				HStack {
 					Text(row.label)
 						.frame(width: 110, alignment: .leading)
 
 					RemoteImage(url: row.iconURL)
 						.frame(width: 50, height: 50)
-
 					Spacer()
-
 					Text(row.range)
 				}
 				.font(.body)
@@ -50,7 +53,7 @@ struct ForecastSection : View {
 			RoundedRectangle(cornerRadius: 16)
 				.fill(foregroundColor.opacity(0.08))
 		)
-		.padding(.horizontal,65)
+		.padding(.horizontal,horizontalPadding)
 
 	}
 }

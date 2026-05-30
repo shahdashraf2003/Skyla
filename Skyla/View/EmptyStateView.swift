@@ -20,7 +20,6 @@ struct EmptyStateView: View {
                 .fontWeight(.semibold)
 
             Text("Try again later")
-
                 .foregroundColor(.secondary)
         }
     }

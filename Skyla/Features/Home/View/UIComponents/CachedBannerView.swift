@@ -17,7 +17,7 @@ struct CachedBannerView: View {
 			Text("Showing cached weather data")
 		}
 		.font(.caption)
-		.padding(.horizontal, 14)
+		.padding(.horizontal, 8)
 		.padding(.vertical, 8)
 		.background(.ultraThinMaterial)
 		.clipShape(Capsule())

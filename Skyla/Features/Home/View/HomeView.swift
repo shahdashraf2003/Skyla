@@ -88,7 +88,7 @@ struct HomeView: View {
 				)
 			}.animation(.easeInOut, value: viewModel.isConnected).padding(.bottom, 32)
 		}.refreshable {
-			await viewModel.refresh()
+			 viewModel.refresh()
 		}
 	}
 }
