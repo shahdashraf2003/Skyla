@@ -19,20 +19,25 @@ struct DayDetailsView: View {
 	}
     var body: some View {
 
-        ZStack {
-			Image(viewModel.backgroundImageName)
-                .resizable()
-                .scaledToFill()
-                .ignoresSafeArea()
 
-            ScrollView {
-                VStack(spacing: 20) {
-                    header
-                    HourlyForecastView(hours: viewModel.groupedHours)
-						.padding(.horizontal , horizontalPadding)
-                }
-				.foregroundColor(foregroundColor)
-			}.padding(.horizontal , horizontalPadding-24)
+		ZStack {
+			Image(viewModel.backgroundImageName)
+				.resizable()
+				.scaledToFill()
+				.ignoresSafeArea()
+			if viewModel.isEmpty {
+				EmptyStateView().foregroundColor(foregroundColor)
+			}
+			else{
+				ScrollView {
+					VStack(spacing: 20) {
+						header
+						HourlyForecastView(hours: viewModel.groupedHours)
+							.padding(.horizontal , horizontalPadding)
+					}
+					.foregroundColor(foregroundColor)
+				}.padding(.horizontal , horizontalPadding-24)
+			}
 		}
     }
 
