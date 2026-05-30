@@ -11,7 +11,7 @@ import SwiftUI
 struct HourlyForecastView: View {
 
     let hours: [[HourWeather]]
-
+	let backgroundColor : Color
 	var body: some View {
 		
 		VStack(alignment: .leading, spacing: 12) {
@@ -23,7 +23,10 @@ struct HourlyForecastView: View {
 				
 				ForEach(Array(hours.enumerated()), id: \.offset) { _, group in
 					
-					HourGroupView(group: group)
+					HourGroupView(
+						group: group,
+						backgroundColor: backgroundColor
+					)
 				}
 			}
 			

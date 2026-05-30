@@ -11,6 +11,7 @@ import Swinject
 
 @main
 struct SkylaApp: App {
+	@StateObject var weatherContext = WeatherContext()
 	let factory  = AppContainer.shared.makeFactory()
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
@@ -29,7 +30,7 @@ struct SkylaApp: App {
         WindowGroup {
 			HomeView(
 				viewModel: factory.makeHomeViewModel()
-			)
+			) .environmentObject(weatherContext)
 
 		}
         .modelContainer(sharedModelContainer)

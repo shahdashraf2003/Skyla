@@ -11,7 +11,7 @@ import SwiftUI
 struct HourGroupView: View {
 
 	let group: [HourWeather]
-
+	let backgroundColor : Color
 	private var models: [HourUIModel] {
 		group.map { hour in
 			let date = DateHelper.parseDateTime(hour.time)
@@ -37,7 +37,8 @@ struct HourGroupView: View {
 				.background(.foreground.opacity(0.7))
 			ForEach(models) { model in
 				HourCell(
-					hour: model
+					hour: model,
+					backgroundColor: backgroundColor
 
 				)
 			}

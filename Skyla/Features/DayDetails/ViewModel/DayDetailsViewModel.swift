@@ -104,14 +104,8 @@ final class DayDetailsViewModel: ObservableObject {
 		)
 	}
 
-	var theme: WeatherTheme {
-		ThemeHelper.currentTheme()
-	}
 
-	var backgroundImageName: String {
-		theme.backgroundImage
-	}
-
+	
 	private func removeDuplicates(from hours: [HourWeather]) -> [HourWeather] {
 
 		var seen = Set<String>()

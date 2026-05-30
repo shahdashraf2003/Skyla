@@ -9,10 +9,14 @@
 import SwiftUI
 
 struct DayDetailsView: View {
-
+	@EnvironmentObject var weatherContext: WeatherContext
     @StateObject var viewModel: DayDetailsViewModel
 	var foregroundColor: Color {
-		viewModel.theme == .day ? .black : .white
+		weatherContext.theme == .day ? .black : .white
+	}
+
+	var backgroundColor: Color {
+		weatherContext.theme == .day ? .white : .black
 	}
 	var horizontalPadding: CGFloat {
 		foregroundColor == .black ? 45 : 55
@@ -21,7 +25,7 @@ struct DayDetailsView: View {
 
 
 		ZStack {
-			Image(viewModel.backgroundImageName)
+			Image(weatherContext.theme.backgroundImage)
 				.resizable()
 				.scaledToFill()
 				.ignoresSafeArea()
@@ -32,7 +36,10 @@ struct DayDetailsView: View {
 				ScrollView {
 					VStack(spacing: 20) {
 						header
-						HourlyForecastView(hours: viewModel.groupedHours)
+						HourlyForecastView(
+							hours: viewModel.groupedHours,
+							backgroundColor: backgroundColor
+						)
 							.padding(.horizontal , horizontalPadding)
 					}
 					.foregroundColor(foregroundColor)

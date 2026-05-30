@@ -7,20 +7,20 @@
 
 import SwiftUI
 struct SavedLocationsView: View {
-
+	@EnvironmentObject var weatherContext: WeatherContext
 	@StateObject var viewModel: SavedLocationsViewModel
 	@State private var locationToDelete: SavedLocation?
 	let onSelectLocation: (SavedLocation) -> Void 
 	var foregroundColor: Color {
-		viewModel.theme == .day ? .black : .white
+		weatherContext.theme == .day ? .black : .white
 	}
 	var backGroundColor: Color {
-		ThemeHelper.opColorTheme()
+		ThemeHelper.opColorTheme(hour: weatherContext.hour)
 	}
 
 	var body: some View {
 		ZStack {
-			Image(viewModel.backgroundImageName)
+			Image(weatherContext.theme.backgroundImage)
 				.resizable()
 				.scaledToFill()
 				.ignoresSafeArea()
@@ -63,8 +63,8 @@ struct SavedLocationsView: View {
 				}
 				.environment(\.defaultMinListRowHeight, 0)
 				.scrollContentBackground(.hidden)
-				.padding(.horizontal, viewModel.theme == .night ? 40 : 0)
-				
+				.padding(.horizontal, weatherContext.theme == .night ? 40 : 0)
+
 			}
 		}
 		.confirmationDialog(
@@ -99,7 +99,7 @@ struct SavedLocationsView: View {
 					.clipShape(Circle())
 					.shadow(radius: 8)
 			}
-			.padding(.horizontal, viewModel.theme == .night ? 52 : 8)
+			.padding(.horizontal, weatherContext.theme == .night ? 52 : 8)
 		}
 	}
 }

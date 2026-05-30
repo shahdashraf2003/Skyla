@@ -10,45 +10,55 @@ import _LocationEssentials
 
 @MainActor
 final class HomeViewModel: ObservableObject {
-
+	
 	let weatherRepository: WeatherRepositoryProtocol
 	let locationService: LocationServiceProtocol
 	let savedLocationRepository: SavedLocationRepositoryProtocol
 	private var cancellables = Set<AnyCancellable>()
 	private let networkMonitor = NetworkMonitor.shared
 	private var fetchTask: Task<Void, Never>?
-	private var lastLocation: CLLocationCoordinate2D?
+	private var currentGPSLocation: CLLocationCoordinate2D?
 	private var isViewingSelectedLocation = false
-
+	
 	@Published private(set) var weather: WeatherResponse?
 	@Published var state: ViewState = .loading
 	@Published private(set) var isConnected = true
 	@Published private(set) var isShowingCachedData = false
 	@Published var selectedDay: ForecastDay?
 	@Published var showSavedLocations = false
+	
+	@Published var allLocations: [SavedLocation] = []
+	@Published var currentLocationIndex: Int = 0
+	private let weatherContext: WeatherContext
 
 	init(
 		weatherRepository: WeatherRepositoryProtocol,
 		locationService: LocationServiceProtocol,
-		savedLocationRepository: SavedLocationRepositoryProtocol
+		savedLocationRepository: SavedLocationRepositoryProtocol,
+	    weatherContext: WeatherContext
 	) {
 		self.weatherRepository = weatherRepository
 		self.locationService = locationService
 		self.savedLocationRepository = savedLocationRepository
+		self.weatherContext = weatherContext
+		loadLocations()
 		bindLocation()
 		bindNetwork()
 		bindAuthorization()
+	
+
 	}
-
-
-
+	
+	
+	
 	private func bindLocation() {
 		locationService.locationPublisher
 			.receive(on: DispatchQueue.main)
 			.sink { [weak self] location in
 				guard let self else { return }
 				guard !self.isViewingSelectedLocation else { return }
-				self.lastLocation = location.coordinate
+				print("Location received:", location.coordinate)
+				self.currentGPSLocation = location.coordinate
 				self.fetchWeather(
 					lat: location.coordinate.latitude,
 					lon: location.coordinate.longitude
@@ -56,7 +66,7 @@ final class HomeViewModel: ObservableObject {
 			}
 			.store(in: &cancellables)
 	}
-
+	
 	private func bindAuthorization() {
 		locationService.authorizationStatusPublisher
 			.receive(on: DispatchQueue.main)
@@ -66,7 +76,7 @@ final class HomeViewModel: ObservableObject {
 			}
 			.store(in: &cancellables)
 	}
-
+	
 	private func bindNetwork() {
 		networkMonitor.$isConnected
 			.receive(on: DispatchQueue.main)
@@ -74,42 +84,69 @@ final class HomeViewModel: ObservableObject {
 			.sink { [weak self] connected in
 				guard let self else { return }
 				self.isConnected = connected
-
+				
 				if connected,
 				   self.weather == nil,
-				   let location = self.lastLocation {
-					self.fetchWeather(lat: location.latitude, lon: location.longitude)
+				   let location = self.currentGPSLocation {
+
+					self.fetchWeather(
+						lat: location.latitude,
+						lon: location.longitude
+					)
 				}
 			}
 			.store(in: &cancellables)
 	}
-
-
-
+	
+	
+	
 	func onAppear() {
 		guard handleLocationAuthorization() else { return }
 		guard !isViewingSelectedLocation else { return }
-
-		if let location = lastLocation {
+		
+		if let location = currentGPSLocation {
 			fetchWeather(lat: location.latitude, lon: location.longitude)
 		} else {
 			locationService.requestLocation()
 		}
 	}
-
+	
 	func checkLocationPermission() {
 		guard handleLocationAuthorization() else { return }
 		locationService.requestLocation()
 	}
-
+	
 	func selectLocation(_ location: SavedLocation) {
-		isViewingSelectedLocation = true
-		lastLocation = CLLocationCoordinate2D(
-			latitude: location.lat,
-			longitude: location.lon
-		)
+
 		showSavedLocations = false
-		fetchWeather(lat: location.lat, lon: location.lon, saveAsCurrent: false)
+
+		if let index = allLocations.firstIndex(where: { $0.id == location.id }) {
+			currentLocationIndex = index
+		}
+
+		if location.isCurrent {
+
+			isViewingSelectedLocation = false
+
+			if let gps = currentGPSLocation {
+				fetchWeather(
+					lat: gps.latitude,
+					lon: gps.longitude
+				)
+			} else {
+				locationService.requestLocation()
+			}
+
+			return
+		}
+
+		isViewingSelectedLocation = true
+
+		fetchWeather(
+			lat: location.lat,
+			lon: location.lon,
+			saveAsCurrent: false
+		)
 	}
 
 	func refresh() async {
@@ -117,18 +154,35 @@ final class HomeViewModel: ObservableObject {
 			isShowingCachedData = true
 			return
 		}
+		
+		if isViewingSelectedLocation {
 
+			guard allLocations.indices.contains(currentLocationIndex) else {
+				return
+			}
 
-		if let location = lastLocation {
+			let location = allLocations[currentLocationIndex]
+			
 			fetchWeather(
-				lat: location.latitude,
-				lon: location.longitude,
-				saveAsCurrent: !isViewingSelectedLocation
+				lat: location.lat,
+				lon: location.lon,
+				saveAsCurrent: false
 			)
+
 			return
 		}
 
+		if let location = currentGPSLocation {
 
+			fetchWeather(
+				lat: location.latitude,
+				lon: location.longitude
+			)
+
+			return
+		}
+
+		
 		await withCheckedContinuation { continuation in
 			var resumed = false
 			locationService.locationPublisher
@@ -137,7 +191,7 @@ final class HomeViewModel: ObservableObject {
 				.sink { [weak self] location in
 					guard let self, !resumed else { return }
 					resumed = true
-					self.lastLocation = location.coordinate
+					self.currentGPSLocation = location.coordinate
 					self.fetchWeather(lat: location.coordinate.latitude,
 									  lon: location.coordinate.longitude)
 					continuation.resume()
@@ -146,21 +200,12 @@ final class HomeViewModel: ObservableObject {
 			locationService.requestLocation()
 		}
 	}
-
-	func refresh() {
-		isViewingSelectedLocation = false
-		guard isConnected else {
-			isShowingCachedData = true
-			return
-		}
-	 locationService.requestLocation()
-
-	}
-
+	
+	
 	func fetchWeather(lat: Double, lon: Double, saveAsCurrent: Bool = true) {
 		fetchTask?.cancel()
 		if weather == nil { state = .loading }
-
+		
 		fetchTask = Task {
 			do {
 				let result = try await weatherRepository.getWeather(
@@ -171,53 +216,56 @@ final class HomeViewModel: ObservableObject {
 					state = .empty
 					return
 				}
-
+				
 				weather = result.0
 				isShowingCachedData = result.1
 				state = .loaded
+				weatherContext.localTime = result.0.location.localtime
 
 				if saveAsCurrent {
 					saveCurrentLocation(from: result.0)
 				}
-
+				
 			} catch {
 				guard !Task.isCancelled else { return }
 				state = .error(error.localizedDescription)
 			}
 		}
 	}
-
-
-	var theme: WeatherTheme {
-		ThemeHelper.currentTheme()
+	
+	var weatherTimeProvider: WeatherTimeProvider {
+		WeatherTimeProvider(localTime: weather?.location.localtime)
 	}
-
+	var theme: WeatherTheme {
+		ThemeHelper.theme(hour: weatherTimeProvider.hour)
+	}
+	
 	var backgroundImageName: String {
 		theme.backgroundImage
 	}
-
+	
 	var locationName: String {
 		weather?.location.name ?? ""
 	}
-
+	
 	var currentConditionIconURL: URL? {
 		makeIconURL(from: weather?.current.condition.icon)
 	}
-
+	
 	var currentTemperature: String {
 		guard let temperature = weather?.current.tempC else { return "--" }
 		return TemperatureFormatter.format(temperature)
 	}
-
+	
 	var conditionText: String {
 		weather?.current.condition.text ?? "--"
 	}
-
+	
 	var todayHighLow: String {
 		guard let day = weather?.forecast.forecastday.first?.day else { return "--" }
 		return TemperatureFormatter.range(min: day.mintempC, max: day.maxtempC)
 	}
-
+	
 	var threeDayForecast: [ForecastRow] {
 		guard let days = weather?.forecast.forecastday.prefix(3) else { return [] }
 		return days.enumerated().map { index, day in
@@ -230,12 +278,12 @@ final class HomeViewModel: ObservableObject {
 			)
 		}
 	}
-
+	
 	var infoItems: [InfoItem] {
 		guard let current = weather?.current else { return [] }
 		return WeatherInfoMapper.map(from: current)
 	}
-
+	
 	func selectDay(_ row: ForecastRow) {
 		selectedDay = row.day
 	}
@@ -247,20 +295,38 @@ final class HomeViewModel: ObservableObject {
 		}
 		return true
 	}
-
+	
 	private func label(forIndex index: Int) -> String {
 		DateHelper.dayLabel(for: index)
 	}
-
+	
 	private func makeIconURL(from icon: String?) -> URL? {
 		URLHelper.weatherIconURL(icon)
 	}
-
+	
+	
+	func loadLocations() {
+		allLocations = savedLocationRepository.getLocations()
+	}
+	
 	private func saveCurrentLocation(from weather: WeatherResponse) {
 		savedLocationRepository.saveCurrentLocation(
 			name: weather.location.name,
 			lat: weather.location.lat,
 			lon: weather.location.lon
 		)
+		
+		loadLocations()
+	}
+	
+	
+	
+	func navigateToLocation(at index: Int) {
+
+		guard allLocations.indices.contains(index) else {
+			return
+		}
+
+		selectLocation(allLocations[index])
 	}
 }

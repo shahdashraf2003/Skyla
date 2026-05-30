@@ -35,13 +35,4 @@ final class SavedLocationsViewModel: ObservableObject {
 	}
 
 
-	var theme: WeatherTheme {
-		ThemeHelper.currentTheme()
-	}
-
-	var backgroundImageName: String {
-		theme.backgroundImage
-	}
-
-	
 }
