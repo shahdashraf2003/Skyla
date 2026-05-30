@@ -7,7 +7,7 @@
 
 
 import CoreLocation
-internal import Combine
+import Combine
 
 protocol LocationServiceProtocol: AnyObject {
 	var location: CLLocation? { get }

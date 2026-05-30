@@ -21,7 +21,21 @@ final class AppContainer {
 
     private func registerDependencies() {
 
+		container.register(APIClientProtocol.self) { _ in
 
+			let cache = URLCache(
+				memoryCapacity: 50 * 1024 * 1024,
+				diskCapacity: 100 * 1024 * 1024
+			)
+
+			let config = URLSessionConfiguration.default
+			config.urlCache = cache
+			config.requestCachePolicy = .reloadIgnoringLocalCacheData
+
+			let session = URLSession(configuration: config)
+
+			return APIClient(session: session, cache: cache)
+		}
 
         container.register(WeatherServiceProtocol.self) { resolver in
             let client = resolver.resolve(APIClientProtocol.self)!
@@ -47,20 +61,10 @@ final class AppContainer {
 			)
 		}
 
-		container.register(APIClientProtocol.self) { _ in
-
-			let cache = URLCache(
-				memoryCapacity: 50 * 1024 * 1024,
-				diskCapacity: 100 * 1024 * 1024
-			)
-
-			let config = URLSessionConfiguration.default
-			config.urlCache = cache
-			config.requestCachePolicy = .reloadIgnoringLocalCacheData
-
-			let session = URLSession(configuration: config)
-
-			return APIClient(session: session, cache: cache)
+		container.register(DayDetailsViewModel.self) { (_, day: ForecastDay) in
+			return DayDetailsViewModel(day: day)
 		}
+
+
     }
 }

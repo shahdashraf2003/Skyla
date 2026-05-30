@@ -7,7 +7,7 @@
 
 
 import Foundation
-struct HourWeather: Codable, Identifiable {
+struct HourWeather: Codable, Identifiable ,Hashable {
 
 	let timeEpoch: Int
 	let time: String

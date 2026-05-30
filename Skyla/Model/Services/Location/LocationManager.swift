@@ -8,7 +8,7 @@
 
 import Foundation
 import CoreLocation
-internal import Combine
+import Combine
 
 final class LocationManager: NSObject, ObservableObject, LocationServiceProtocol {
 

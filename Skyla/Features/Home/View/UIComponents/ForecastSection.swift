@@ -12,6 +12,7 @@ struct ForecastSection : View {
 
 	var foregroundColor : Color
 	var threeDayForecast : [ForecastRow]
+	var onSelectDay: (ForecastRow) -> Void
 	var horizontalPadding: CGFloat {
 		foregroundColor == .black ? 45 : 80
 	}
@@ -42,7 +43,10 @@ struct ForecastSection : View {
 				}
 				.font(.body)
 				.padding()
-
+				.contentShape(Rectangle())
+				.onTapGesture {
+					onSelectDay(row)
+				}
 				if index < threeDayForecast.count - 1 {
 					Divider().background(foregroundColor.opacity(0.2))
 				}

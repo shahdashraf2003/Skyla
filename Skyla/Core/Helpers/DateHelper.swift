@@ -21,4 +21,23 @@ struct DateHelper {
             return f.string(from: date)
         }
     }
+
+	static func parseDate(_ string: String) -> Date {
+		let formatter = DateFormatter()
+		formatter.dateFormat = "yyyy-MM-dd HH:mm"
+		return formatter.date(from: string) ?? Date()
+	}
+
+	static func formatTime(_ string: String) -> String {
+		let formatter = DateFormatter()
+		formatter.dateFormat = "yyyy-MM-dd HH:mm"
+
+		guard let date = formatter.date(from: string) else {
+			return string
+		}
+
+		let output = DateFormatter()
+		output.dateFormat = "h a"   // 1 PM / 2 AM
+		return output.string(from: date)
+	}
 }

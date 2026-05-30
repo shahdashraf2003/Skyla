@@ -11,7 +11,7 @@ struct Forecast: Codable {
 	let forecastday: [ForecastDay]
 }
 
-struct ForecastDay: Codable, Identifiable {
+struct ForecastDay: Codable, Identifiable, Hashable {
 
 	let date: String
 	let day: DayForecast
@@ -22,7 +22,7 @@ struct ForecastDay: Codable, Identifiable {
 }
 
 
-struct DayForecast: Codable {
+struct DayForecast: Codable ,Hashable{
 
 	let maxtempC: Double
 	let mintempC: Double
