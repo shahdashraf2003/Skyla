@@ -15,19 +15,23 @@ final class DayDetailsViewModel: ObservableObject {
 
 	init(day: ForecastDay) {
 		self.day = day
+		print("day.date =", day.date)
+		print("parsed =", DateHelper.parseDayDate(day.date))
+		print("today =", Date())
+		print("isToday =", isToday)
 
 	}
 	var isEmpty: Bool {
 		hourlyForecast.isEmpty
 	}
+
 	private var isToday: Bool {
 
 		let dayDate = Calendar.current.startOfDay(
-			for: DateHelper.parseDateTime(day.date)
+			for: DateHelper.parseDayDate(day.date)
 		)
 
 		let today = Calendar.current.startOfDay(for: Date())
-		
 		return dayDate == today
 	}
 
