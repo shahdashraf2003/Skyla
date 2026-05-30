@@ -14,7 +14,11 @@ struct DayDetailsView: View {
 	var foregroundColor: Color {
 		viewModel.theme == .day ? .black : .white
 	}
+	var horizontalPadding: CGFloat {
+		foregroundColor == .black ? 45 : 55
+	}
     var body: some View {
+
         ZStack {
 			Image(viewModel.backgroundImageName)
                 .resizable()
@@ -25,12 +29,11 @@ struct DayDetailsView: View {
                 VStack(spacing: 20) {
                     header
                     HourlyForecastView(hours: viewModel.groupedHours)
+						.padding(.horizontal , horizontalPadding)
                 }
-                .padding()
 				.foregroundColor(foregroundColor)
-            }
+			}.padding(.horizontal , horizontalPadding-24)
 		}
-
     }
 
    

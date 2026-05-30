@@ -33,7 +33,8 @@ struct HourGroupView: View {
 			Text(groupTitle)
 				.font(.caption)
 				.opacity(0.6)
-
+			Divider()
+				.background(.foreground.opacity(0.7))
 			ForEach(models) { model in
 				HourCell(
 					hour: model
@@ -42,10 +43,9 @@ struct HourGroupView: View {
 			}
 		}
 		.padding()
-		.frame(width: 140)
 		.background(
 			RoundedRectangle(cornerRadius: 16)
-				.fill(.white.opacity(0.1))
+				.fill(.foreground.opacity(0.1))
 		)
 	}
 
