@@ -45,12 +45,14 @@ final class HomeViewModel: ObservableObject {
 		bindLocation()
 		bindNetwork()
 		bindAuthorization()
-	
+		print("VM Context:", ObjectIdentifier(weatherContext))
+
+
 
 	}
 	
-	
-	
+
+
 	private func bindLocation() {
 		locationService.locationPublisher
 			.receive(on: DispatchQueue.main)
@@ -220,8 +222,9 @@ final class HomeViewModel: ObservableObject {
 				weather = result.0
 				isShowingCachedData = result.1
 				state = .loaded
-				weatherContext.localTime = result.0.location.localtime
-
+				weatherContext.updateTime(result.0.location.localtime)
+				print(weatherContext.theme)
+				print(allLocations.count)
 				if saveAsCurrent {
 					saveCurrentLocation(from: result.0)
 				}
@@ -232,17 +235,11 @@ final class HomeViewModel: ObservableObject {
 			}
 		}
 	}
-	
-	var weatherTimeProvider: WeatherTimeProvider {
-		WeatherTimeProvider(localTime: weather?.location.localtime)
+	func forceLocationRefresh() {
+		currentGPSLocation = nil
+		locationService.requestLocation()
 	}
-	var theme: WeatherTheme {
-		ThemeHelper.theme(hour: weatherTimeProvider.hour)
-	}
-	
-	var backgroundImageName: String {
-		theme.backgroundImage
-	}
+
 	
 	var locationName: String {
 		weather?.location.name ?? ""

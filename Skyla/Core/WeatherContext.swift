@@ -7,13 +7,14 @@
 import Combine
 
 final class WeatherContext: ObservableObject {
-    var localTime: String?
 
-    var hour: Int {
-        WeatherTimeProvider(localTime: localTime).hour
-    }
+	@Published var localTime: String?
 
-    var theme: WeatherTheme {
-        ThemeHelper.theme(hour: hour)
-    }
+	@Published private(set) var theme: WeatherTheme = .day
+
+	func updateTime(_ time: String?) {
+		self.localTime = time
+		let hour = WeatherTimeProvider(localTime: time).hour
+		self.theme = ThemeHelper.theme(hour: hour)
+	}
 }

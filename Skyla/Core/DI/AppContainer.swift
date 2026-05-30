@@ -57,15 +57,16 @@ final class AppContainer {
 			WeatherContext()
 		}.inObjectScope(.container)
 
+		
 		container.register(HomeViewModel.self) { resolver in
 			let repo = resolver.resolve(WeatherRepositoryProtocol.self)!
 			let locationService = resolver.resolve(LocationServiceProtocol.self)!
-			let savedLocationRepo = resolver.resolve(
-				SavedLocationRepositoryProtocol.self)!
+			let savedLocationRepo = resolver.resolve(SavedLocationRepositoryProtocol.self)!
 			let weatherContext = resolver.resolve(WeatherContext.self)!
+
 			return HomeViewModel(
 				weatherRepository: repo,
-				locationService:  locationService,
+				locationService: locationService,
 				savedLocationRepository: savedLocationRepo,
 				weatherContext: weatherContext
 			)

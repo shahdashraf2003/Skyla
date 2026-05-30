@@ -10,7 +10,7 @@ import Foundation
 
 protocol ViewModelFactoryProtocol {
 
-    func makeHomeViewModel() -> HomeViewModel
+	func makeHomeViewModel() -> HomeViewModel
 
     func makeDayDetailsViewModel(day: ForecastDay) -> DayDetailsViewModel
 

@@ -15,7 +15,7 @@ struct SavedLocationsView: View {
 		weatherContext.theme == .day ? .black : .white
 	}
 	var backGroundColor: Color {
-		ThemeHelper.opColorTheme(hour: weatherContext.hour)
+		weatherContext.theme == .day ? .white : .black
 	}
 
 	var body: some View {

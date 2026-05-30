@@ -9,13 +9,14 @@ import SwiftUI
 struct HomeView: View {
 	let factory = AppContainer.shared.makeFactory()
 	@StateObject var viewModel: HomeViewModel
+	@EnvironmentObject var context: WeatherContext
 
 	var foregroundColor: Color {
-		viewModel.theme == .day ? .black : .white
+		context.theme == .day ? .black : .white
 	}
 
 	var backgroundColor: Color {
-		viewModel.theme == .day ? .white : .black
+		context.theme == .day ? .white : .black
 	}
 
 	@Environment(\.scenePhase) private var scenePhase
@@ -23,7 +24,7 @@ struct HomeView: View {
 	var body: some View {
 		NavigationStack {
 			ZStack(alignment: .top) {
-				Image(viewModel.backgroundImageName)
+				Image(context.theme.backgroundImage)
 					.resizable()
 					.scaledToFill()
 					.ignoresSafeArea()
@@ -57,7 +58,9 @@ struct HomeView: View {
 			.onChange(of: scenePhase) { _ , phase in
 				if phase == .active {
 					viewModel.checkLocationPermission()
+					viewModel.forceLocationRefresh()
 				}
+				print("VIEW Context:", ObjectIdentifier(context))
 			}
 			.navigationDestination(item: $viewModel.selectedDay) { day in
 				DayDetailsView(
@@ -95,6 +98,7 @@ struct HomeView: View {
 			switch viewModel.state {
 				case .loading:
 					ProgressView()
+						.foregroundColor(foregroundColor)
 
 				case .loaded:
 					content

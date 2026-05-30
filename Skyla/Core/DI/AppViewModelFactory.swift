@@ -16,7 +16,7 @@ final class AppViewModelFactory: ViewModelFactoryProtocol {
         self.container = container
     }
 
-    func makeHomeViewModel() -> HomeViewModel {
+	func makeHomeViewModel() -> HomeViewModel {
         container.resolve(HomeViewModel.self)!
     }
 
