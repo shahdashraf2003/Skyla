@@ -10,7 +10,7 @@ struct SavedLocationsView: View {
 
 	@StateObject var viewModel: SavedLocationsViewModel
 	@State private var locationToDelete: SavedLocation?
-
+	let onSelectLocation: (SavedLocation) -> Void 
 	var foregroundColor: Color {
 		viewModel.theme == .day ? .black : .white
 	}
@@ -28,14 +28,20 @@ struct SavedLocationsView: View {
 			if viewModel.isEmpty {
 				EmptySavedLocationsView(foregroundColor: foregroundColor)
 			} else {
-				List {
+
+				List{
 					ForEach(viewModel.locations) { location in
 						SavedLocationRow(
 							location: location,
 							foregroundColor: foregroundColor
 						)
+						.contentShape(Rectangle())
+						.onTapGesture {
+							onSelectLocation(location)
+						}
 						.listRowBackground(Color.clear)
 						.listRowSeparator(.hidden)
+						.listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 8, trailing: 0))
 						.swipeActions(edge: .trailing, allowsFullSwipe: false) {
 							if !location.isCurrent {
 								Button(role: .destructive) {
@@ -55,8 +61,10 @@ struct SavedLocationsView: View {
 						}
 					}
 				}
+				.environment(\.defaultMinListRowHeight, 0)
 				.scrollContentBackground(.hidden)
 				.padding(.horizontal, viewModel.theme == .night ? 40 : 0)
+				
 			}
 		}
 		.confirmationDialog(

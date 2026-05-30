@@ -13,6 +13,10 @@ struct HomeView: View {
 		viewModel.theme == .day ? .black : .white
 	}
 
+	var backgroundColor: Color {
+		viewModel.theme == .day ? .white : .black
+	}
+
 	@Environment(\.scenePhase) private var scenePhase
 	var body: some View {
 		NavigationStack {
@@ -56,7 +60,7 @@ struct HomeView: View {
 			.onAppear {
 				viewModel.onAppear()
 			}
-			.onChange(of: scenePhase){ _ ,phase in
+			.onChange(of: scenePhase){phase in
 				if phase == .active {
 					viewModel.checkLocationPermission()
 				}
@@ -66,9 +70,13 @@ struct HomeView: View {
 				)
 			}.navigationDestination(isPresented: $viewModel.showSavedLocations) {
 				SavedLocationsView(
-					viewModel: factory.makeSavedLocationsViewModel()
+					viewModel: factory.makeSavedLocationsViewModel(),
+					onSelectLocation: { location in
+						viewModel.selectLocation(location)
+					}
 				)
-			}
+
+				}
 			.toolbar {
 				ToolbarItem(placement: .topBarTrailing) {
 					Button {
@@ -90,7 +98,11 @@ struct HomeView: View {
 			VStack(spacing: 24) {
 
 				if viewModel.isShowingCachedData {
-					CachedBannerView()
+					CachedBannerView(
+						foreground : foregroundColor,
+						backgound : backgroundColor
+					)
+
 						.transition(.move(edge: .top).combined(with: .opacity))
 				}
 
@@ -119,7 +131,7 @@ struct HomeView: View {
 			.padding(.bottom, 32)
 		}
 		.refreshable {
-			viewModel.refresh()
+			await viewModel.refresh()
 		}
 	}
 }

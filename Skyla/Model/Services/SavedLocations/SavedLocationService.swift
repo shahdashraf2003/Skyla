@@ -23,7 +23,6 @@ final class SavedLocationService: SavedLocationServiceProtocol {
 
 		let current = locations.filter(\.isCurrent)
 		let others = locations.filter { !$0.isCurrent}
-		try? context.save() 
 		return current + others
 	}
 
