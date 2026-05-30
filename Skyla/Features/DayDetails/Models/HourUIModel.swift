@@ -7,11 +7,10 @@
 
 import Foundation
 
-
 struct HourUIModel: Identifiable {
 	let id = UUID()
-	let hour: String
-	let temp: String
-	let iconURL: URL?
-	let isHighlighted: Bool
+	let hour: HourWeather
+	let isNow: Bool
+	let displayTitle: String
 }
+

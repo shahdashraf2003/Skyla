@@ -22,11 +22,7 @@ struct DateHelper {
         }
     }
 
-	static func parseDate(_ string: String) -> Date {
-		let formatter = DateFormatter()
-		formatter.dateFormat = "yyyy-MM-dd HH:mm"
-		return formatter.date(from: string) ?? Date()
-	}
+
 
 	static func formatTime(_ string: String) -> String {
 		let formatter = DateFormatter()
@@ -37,7 +33,24 @@ struct DateHelper {
 		}
 
 		let output = DateFormatter()
-		output.dateFormat = "h a"   // 1 PM / 2 AM
+		output.dateFormat = "h a"
 		return output.string(from: date)
 	}
+
+
+
+
+		static func parseDayDate(_ string: String) -> Date {
+			let formatter = DateFormatter()
+			formatter.dateFormat = "yyyy-MM-dd"
+			return formatter.date(from: string) ?? Date.distantPast
+		}
+
+		static func parseDateTime(_ string: String) -> Date {
+			let formatter = DateFormatter()
+			formatter.dateFormat = "yyyy-MM-dd HH:mm"
+			return formatter.date(from: string) ?? Date.distantPast
+		}
+
+
 }

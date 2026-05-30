@@ -15,24 +15,70 @@ final class DayDetailsViewModel: ObservableObject {
 
 	init(day: ForecastDay) {
 		self.day = day
+		print("DAY:", day.date)
+		print("PARSED:", DateHelper.parseDateTime(day.date))
+		print("TODAY:", Date())
+		print("IS TODAY:", isToday)
 	}
 
+	private var isToday: Bool {
+
+		let dayDate = Calendar.current.startOfDay(
+			for: DateHelper.parseDateTime(day.date)
+		)
+
+		let today = Calendar.current.startOfDay(for: Date())
+		
+		return dayDate == today
+	}
+
+	private var currentHour: Int {
+		Calendar.current.component(.hour, from: Date())
+	}
 	var hourlyForecast: [HourWeather] {
-		let hours = day.hour
 
-		let now = Calendar.current.component(.hour, from: Date())
+		let cleaned = removeDuplicates(from: day.hour)
 
-		return hours.filter {
-			let date = DateHelper.parseDate($0.time)
-			let hour = Calendar.current.component(.hour, from: date)
-			return hour >= now
+		guard isToday else {
+			return cleaned
+		}
+
+		let nowHour = Calendar.current.component(.hour, from: Date())
+
+		return cleaned.filter { hour in
+			let date = DateHelper.parseDateTime(hour.time)
+			let hourValue = Calendar.current.component(.hour, from: date)
+
+			return hourValue >= nowHour
 		}
 	}
-	var groupedHours: [[HourWeather]] {
-		let filtered = hourlyForecast
 
-		return stride(from: 0, to: filtered.count, by: 3).map { index in
-			Array(filtered[index..<min(index + 3, filtered.count)])
+	var hourlyUI: [HourUIModel] {
+
+		return hourlyForecast.map { hour in
+
+			let date = DateHelper.parseDateTime(hour.time)
+			let hourValue = Calendar.current.component(.hour, from: date)
+
+			let isNow = isToday && hourValue == currentHour
+
+			return HourUIModel(
+				hour: hour,
+				isNow: isNow,
+				displayTitle: isNow
+				? "Now"
+				: DateHelper.formatTime(hour.time)
+			)
+		}
+	}
+
+
+	var groupedHours: [[HourWeather]] {
+
+		let hours = hourlyForecast
+
+		return stride(from: 0, to: hours.count, by: 3).map { index in
+			Array(hours[index..<min(index + 3, hours.count)])
 		}
 	}
 
@@ -49,9 +95,11 @@ final class DayDetailsViewModel: ObservableObject {
 	}
 
 	var rangeTemp: String {
-		TemperatureFormatter.range(min: day.day.mintempC, max: day.day.maxtempC)
+		TemperatureFormatter.range(
+			min: day.day.mintempC,
+			max: day.day.maxtempC
+		)
 	}
-
 
 	var theme: WeatherTheme {
 		ThemeHelper.currentTheme()
@@ -61,8 +109,15 @@ final class DayDetailsViewModel: ObservableObject {
 		theme.backgroundImage
 	}
 
-	
+	private func removeDuplicates(from hours: [HourWeather]) -> [HourWeather] {
 
+		var seen = Set<String>()
 
-
+		return hours.filter { hour in
+			let key = hour.time
+			guard !seen.contains(key) else { return false }
+			seen.insert(key)
+			return true
+		}
+	}
 }

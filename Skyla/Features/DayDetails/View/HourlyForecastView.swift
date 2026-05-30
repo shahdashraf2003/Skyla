@@ -22,7 +22,7 @@ struct HourlyForecastView: View {
 
             ScrollView(.horizontal, showsIndicators: false) {
 
-                HStack(spacing: 12) {
+				VStack(spacing: 12) {
 
                     ForEach(Array(hours.enumerated()), id: \.offset) { _, group in
 
@@ -31,6 +31,6 @@ struct HourlyForecastView: View {
                 }
                 .scrollTargetBehavior(.viewAligned)
             }
-        }
+		}
     }
 }

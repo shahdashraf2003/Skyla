@@ -15,7 +15,6 @@ struct DayDetailsView: View {
 		viewModel.theme == .day ? .black : .white
 	}
     var body: some View {
-
         ZStack {
 			Image(viewModel.backgroundImageName)
                 .resizable()
@@ -28,10 +27,10 @@ struct DayDetailsView: View {
                     HourlyForecastView(hours: viewModel.groupedHours)
                 }
                 .padding()
+				.foregroundColor(foregroundColor)
             }
-        }
-        .navigationTitle(viewModel.date)
-        .navigationBarTitleDisplayMode(.inline)
+		}
+
     }
 
    

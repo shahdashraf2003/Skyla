@@ -5,36 +5,52 @@
 //  Created by Shahudaa on 29/05/2026.
 //
 
-
 import SwiftUI
+
 
 struct HourGroupView: View {
 
-    let group: [HourWeather]
+	let group: [HourWeather]
 
-    var body: some View {
+	private var models: [HourUIModel] {
+		group.map { hour in
+			let date = DateHelper.parseDateTime(hour.time)
 
-        VStack(alignment: .leading, spacing: 8) {
+			let isNow = Calendar.current.isDate(date, equalTo: Date(), toGranularity: .hour)
 
-            Text(groupTitle)
-                .font(.caption)
-                .opacity(0.6)
+			return HourUIModel(
+				hour: hour,
+				isNow: isNow, displayTitle: isNow ? "Now" : DateHelper
+					.formatTime(hour.time)
+			)
+		}
+	}
 
-            ForEach(group, id: \.time) { hour in
-                HourCell(hour: hour)
-            }
-        }
-        .padding()
-        .frame(width: 140)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(.white.opacity(0.1))
-        )
-    }
+	var body: some View {
 
-    private var groupTitle: String {
-        guard let first = group.first else { return "" }
+		VStack(alignment: .leading, spacing: 8) {
+
+			Text(groupTitle)
+				.font(.caption)
+				.opacity(0.6)
+
+			ForEach(models) { model in
+				HourCell(
+					hour: model
+
+				)
+			}
+		}
+		.padding()
+		.frame(width: 140)
+		.background(
+			RoundedRectangle(cornerRadius: 16)
+				.fill(.white.opacity(0.1))
+		)
+	}
+
+	private var groupTitle: String {
+		guard let first = group.first else { return "" }
 		return DateHelper.formatTime(first.time)
-		
-    }
+	}
 }

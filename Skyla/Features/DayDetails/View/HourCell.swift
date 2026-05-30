@@ -10,23 +10,22 @@ import SwiftUI
 
 struct HourCell: View {
 
-    let hour: HourWeather
-
+	let hour: HourUIModel
     var body: some View {
 
         HStack {
 
-			Text(DateHelper.formatTime(hour.time))
-                .font(.caption)
+			Text(hour.displayTitle)
+				.fontWeight(hour.isNow ? .bold : .regular)
+				.foregroundColor(hour.isNow ? .orange : .primary)
 
             Spacer()
 
-
-                RemoteImage(url: URLHelper.weatherIconURL(hour.condition.icon))
+			RemoteImage(url: URLHelper.weatherIconURL(hour.hour.condition.icon))
                     .frame(width: 30, height: 30)
 
 
-            Text("\(Int(hour.tempC))°")
+			Text("\(Int(hour.hour.tempC))°")
                 .font(.caption)
         }
     }
