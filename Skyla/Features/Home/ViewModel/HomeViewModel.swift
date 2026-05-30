@@ -6,7 +6,7 @@
 //
 import Foundation
 import Combine
-internal import _LocationEssentials
+import _LocationEssentials
 
 @MainActor
 final class HomeViewModel: ObservableObject {
@@ -23,6 +23,7 @@ final class HomeViewModel: ObservableObject {
 	@Published private(set) var isShowingCachedData = false
 
 	@Published var selectedDay: ForecastDay?
+	@Published var showSavedLocations = false
 
 	init(
 		weatherRepository: WeatherRepositoryProtocol,

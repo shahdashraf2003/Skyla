@@ -8,6 +8,7 @@
 
 import Swinject
 import Foundation
+import SwiftData
 
 final class AppContainer {
 
@@ -66,5 +67,33 @@ final class AppContainer {
 		}
 
 
+		container.register(ModelContainer.self) { _ in
+			try! ModelContainer(for: SavedLocation.self)
+		}
+		.inObjectScope(.container)
+
+
+		container.register(SavedLocationServiceProtocol.self) { resolver in
+			let container = resolver.resolve(ModelContainer.self)!
+			return SavedLocationService(context: container.mainContext)
+		}
+
+
+		container.register(SavedLocationRepositoryProtocol.self) { resolver in
+			let service = resolver.resolve(SavedLocationService.self)!
+			return SavedLocationRepository(service: service)
+		}
+
+
+		container.register(SavedLocationsViewModel.self) { resolver in
+			let repo = resolver.resolve(SavedLocationRepositoryProtocol.self)!
+			return SavedLocationsViewModel(repo: repo)
+		}
+
     }
+	func makeFactory() -> ViewModelFactoryProtocol {
+		AppViewModelFactory(container: container)
+	}
+
 }
+

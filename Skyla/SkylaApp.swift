@@ -11,9 +11,10 @@ import Swinject
 
 @main
 struct SkylaApp: App {
+	let factory  = AppContainer.shared.makeFactory()
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
-            Item.self,
+			SavedLocation.self,
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
@@ -27,8 +28,9 @@ struct SkylaApp: App {
     var body: some Scene {
         WindowGroup {
 			HomeView(
-				viewModel: AppContainer.shared.container.resolve(HomeViewModel.self)!
+				viewModel: factory.makeHomeViewModel()
 			)
+
         }
         .modelContainer(sharedModelContainer)
     }

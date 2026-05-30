@@ -4,12 +4,23 @@
 //
 //  Created by Shahd Ashraf on 28/05/2026.
 //
+
 import Foundation
+import SwiftData
 
-struct SavedLocation: Codable, Identifiable, Hashable {
+@Model
+final class SavedLocation {
+	var id: UUID
+	var name: String
+	var lat: Double
+	var lon: Double
+	var isSelected: Bool
 
-    let id: UUID
-    let city: String
-    let lat: Double
-    let lon: Double
+	init(name: String, lat: Double, lon: Double, isSelected: Bool = false) {
+		self.id = UUID()
+		self.name = name
+		self.lat = lat
+		self.lon = lon
+		self.isSelected = isSelected
+	}
 }

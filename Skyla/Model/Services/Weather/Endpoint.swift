@@ -14,7 +14,7 @@ enum Endpoint {
     var url: URL? {
         switch self {
         case .forecast(let lat, let lon, let days):
-            let apiKey = "65320a03b2864599848161031262605"
+            let apiKey = "50a29bb09d3f4fd3a8b85528263005"
 
             let urlString = "https://api.weatherapi.com/v1/forecast.json?key=\(apiKey)&q=\(lat),\(lon)&days=\(days)&aqi=yes&alerts=no"
 
