@@ -21,14 +21,20 @@ final class SavedLocationsViewModel: ObservableObject {
 		load()
 	}
 
+	var isEmpty : Bool {
+		return locations.count <= 0
+	}
 	func load() {
 		locations = repo.getLocations()
 	}
 	
 	func delete(_ item: SavedLocation) {
+		print("dele")
 		repo.deleteLocation(item)
 		load()
 	}
+
+
 	var theme: WeatherTheme {
 		ThemeHelper.currentTheme()
 	}

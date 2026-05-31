@@ -6,15 +6,14 @@
 //
 
 import SwiftUI
-import Combine
-
 struct SavedLocationsView: View {
 
-	@StateObject var viewModel : SavedLocationsViewModel
+	@StateObject var viewModel: SavedLocationsViewModel
+	@State private var locationToDelete: SavedLocation?
+
 	var foregroundColor: Color {
 		viewModel.theme == .day ? .black : .white
 	}
-
 	var backGroundColor: Color {
 		ThemeHelper.opColorTheme()
 	}
@@ -26,43 +25,64 @@ struct SavedLocationsView: View {
 				.scaledToFill()
 				.ignoresSafeArea()
 
-			List {
-
-				ForEach(viewModel.locations) { location in
-
-					SavedLocationRow(
-						location: location,
-						foregroundColor: foregroundColor
-					) {
-						viewModel.delete(location)
-					}.listRowBackground(Color.clear)
+			if viewModel.isEmpty {
+				EmptySavedLocationsView(foregroundColor: foregroundColor)
+			} else {
+				List {
+					ForEach(viewModel.locations) { location in
+						SavedLocationRow(
+							location: location,
+							foregroundColor: foregroundColor
+						)
+						.listRowBackground(Color.clear)
 						.listRowSeparator(.hidden)
+						.swipeActions(edge: .trailing, allowsFullSwipe: false) {
+							if !location.isCurrent {
+								Button(role: .destructive) {
+									locationToDelete = location
+								} label: {
+									Label("Delete", systemImage: "trash")
+								}
+							}
+						}
 
-					if location.isCurrent && viewModel.locations.count > 1{
-
+						if location.isCurrent && viewModel.locations.count > 1 {
 							Rectangle()
-							.fill(foregroundColor.opacity(0.5))
+								.fill(foregroundColor.opacity(0.5))
 								.frame(height: 0.5)
 								.listRowBackground(Color.clear)
 								.listRowSeparator(.hidden)
-
-
-
+						}
 					}
-
 				}
-
+				.scrollContentBackground(.hidden)
+				.padding(.horizontal, viewModel.theme == .night ? 40 : 0)
 			}
-			.scrollContentBackground(.hidden)
-			.padding(.horizontal, viewModel.theme == .night ? 40 : 0)
-		}.overlay(alignment: .bottomTrailing) {
-
+		}
+		.confirmationDialog(
+			"Remove \(locationToDelete?.name ?? "")?",
+			isPresented: Binding(
+				get: { locationToDelete != nil },
+				set: { if !$0 { locationToDelete = nil } }
+			),
+			titleVisibility: .visible
+		) {
+			Button("Remove", role: .destructive) {
+				if let location = locationToDelete {
+					viewModel.delete(location)
+					locationToDelete = nil
+				}
+			}
+			Button("Cancel", role: .cancel) {
+				locationToDelete = nil
+			}
+		} message: {
+			Text("This location will be removed from your saved list.")
+		}
+		.overlay(alignment: .bottomTrailing) {
 			Button {
-
 				viewModel.showAddLocation = true
-
 			} label: {
-
 				Image(systemName: "plus")
 					.font(.title2)
 					.foregroundColor(backGroundColor)
@@ -72,7 +92,6 @@ struct SavedLocationsView: View {
 					.shadow(radius: 8)
 			}
 			.padding(.horizontal, viewModel.theme == .night ? 52 : 8)
-
 		}
 	}
 }

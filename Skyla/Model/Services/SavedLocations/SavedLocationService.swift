@@ -23,16 +23,18 @@ final class SavedLocationService: SavedLocationServiceProtocol {
 
 		let current = locations.filter(\.isCurrent)
 		let others = locations.filter { !$0.isCurrent}
-
+		try? context.save() 
 		return current + others
 	}
 
     func add(_ item: SavedLocation) {
         context.insert(item)
+		try? context.save()
     }
 
     func delete(_ item: SavedLocation) {
         context.delete(item)
+		try? context.save()
     }
 
 	func exists(lat: Double, lon: Double) -> Bool {
