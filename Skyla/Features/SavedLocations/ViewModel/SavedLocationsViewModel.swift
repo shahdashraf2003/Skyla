@@ -15,7 +15,7 @@ final class SavedLocationsViewModel: ObservableObject {
 	private let repo: SavedLocationRepositoryProtocol
 
 	@Published var locations: [SavedLocation] = []
-
+	@Published var showAddLocation = false
 	init(repo: SavedLocationRepositoryProtocol) {
 		self.repo = repo
 		load()
@@ -25,13 +25,16 @@ final class SavedLocationsViewModel: ObservableObject {
 		locations = repo.getLocations()
 	}
 
-	func add(name: String, lat: Double, lon: Double) {
-		repo.addLocation(SavedLocation(name: name, lat: lat, lon: lon))
-		load()
-	}
 
 	func delete(_ item: SavedLocation) {
 		repo.deleteLocation(item)
 		load()
+	}
+	var theme: WeatherTheme {
+		ThemeHelper.currentTheme()
+	}
+
+	var backgroundImageName: String {
+		theme.backgroundImage
 	}
 }

@@ -15,12 +15,13 @@ final class SavedLocation {
 	var lat: Double
 	var lon: Double
 	var isSelected: Bool
-
-	init(name: String, lat: Double, lon: Double, isSelected: Bool = false) {
+	var isCurrent :Bool
+	init(name: String, lat: Double, lon: Double, isSelected: Bool = false ,isCurrent: Bool = false) {
 		self.id = UUID()
 		self.name = name
 		self.lat = lat
 		self.lon = lon
 		self.isSelected = isSelected
+		self.isCurrent = isCurrent
 	}
 }

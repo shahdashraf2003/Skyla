@@ -31,7 +31,7 @@ struct SkylaApp: App {
 				viewModel: factory.makeHomeViewModel()
 			)
 
-        }
+		}
         .modelContainer(sharedModelContainer)
     }
 }

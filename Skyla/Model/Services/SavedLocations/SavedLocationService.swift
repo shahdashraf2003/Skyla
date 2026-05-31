@@ -28,4 +28,21 @@ final class SavedLocationService: SavedLocationServiceProtocol {
     func delete(_ item: SavedLocation) {
         context.delete(item)
     }
+
+	func exists(lat: Double, lon: Double) -> Bool {
+
+		let items = fetch()
+
+		for item in items {
+
+			let sameLatitude = abs(item.lat - lat) < 0.0001
+			let sameLongitude = abs(item.lon - lon) < 0.0001
+
+			if sameLatitude && sameLongitude {
+				return true
+			}
+		}
+
+		return false
+	}
 }

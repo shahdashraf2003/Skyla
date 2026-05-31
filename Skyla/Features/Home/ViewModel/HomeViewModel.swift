@@ -13,6 +13,7 @@ final class HomeViewModel: ObservableObject {
 
 	let weatherRepository: WeatherRepositoryProtocol
 	let locationService: LocationServiceProtocol
+	let savedLocationRepository: SavedLocationRepositoryProtocol
 	private var cancellables = Set<AnyCancellable>()
 	private let networkMonitor = NetworkMonitor.shared
 	private var fetchTask: Task<Void, Never>?
@@ -27,10 +28,12 @@ final class HomeViewModel: ObservableObject {
 
 	init(
 		weatherRepository: WeatherRepositoryProtocol,
-		locationService: LocationServiceProtocol
+		locationService: LocationServiceProtocol,
+		savedLocationRepository: SavedLocationRepositoryProtocol
 	) {
 		self.weatherRepository = weatherRepository
 		self.locationService = locationService
+		self.savedLocationRepository = savedLocationRepository
 		bindLocation()
 		bindNetwork()
 		bindAuthorization()
@@ -42,6 +45,14 @@ final class HomeViewModel: ObservableObject {
 			.sink { [weak self] location in
 				guard let self else { return }
 				self.lastLocation = location.coordinate
+				self.savedLocationRepository.saveCurrentLocation(
+					name: locationName,
+					lat: location.coordinate.latitude,
+					lon: location.coordinate.longitude,
+					
+
+				)
+				
 				self.fetchWeather(
 					lat: location.coordinate.latitude,
 					lon: location.coordinate.longitude

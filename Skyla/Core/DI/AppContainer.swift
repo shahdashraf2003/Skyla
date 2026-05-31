@@ -56,9 +56,12 @@ final class AppContainer {
 		container.register(HomeViewModel.self) { resolver in
 			let repo = resolver.resolve(WeatherRepositoryProtocol.self)!
 			let locationService = resolver.resolve(LocationServiceProtocol.self)!
+			let savedLocationRepo = resolver.resolve(
+				SavedLocationRepositoryProtocol.self)!
 			return HomeViewModel(
 				weatherRepository: repo,
-				locationService:  locationService
+				locationService:  locationService,
+				savedLocationRepository: savedLocationRepo
 			)
 		}
 
@@ -80,7 +83,7 @@ final class AppContainer {
 
 
 		container.register(SavedLocationRepositoryProtocol.self) { resolver in
-			let service = resolver.resolve(SavedLocationService.self)!
+			let service = resolver.resolve(SavedLocationServiceProtocol.self)!
 			return SavedLocationRepository(service: service)
 		}
 

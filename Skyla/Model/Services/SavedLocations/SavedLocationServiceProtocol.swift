@@ -7,7 +7,8 @@
 
 
 protocol SavedLocationServiceProtocol {
-    func fetch() -> [SavedLocation]
-    func add(_ item: SavedLocation)
-    func delete(_ item: SavedLocation)
+	func fetch() -> [SavedLocation]
+	func add(_ location: SavedLocation)
+	func delete(_ location: SavedLocation)
+	func exists(lat: Double, lon: Double) -> Bool
 }

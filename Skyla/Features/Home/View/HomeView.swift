@@ -74,7 +74,10 @@ struct HomeView: View {
 					Button {
 						viewModel.showSavedLocations = true
 					} label: {
-						Image(systemName: "heart.fill")
+
+						Image(.music)
+							.resizable().frame(width: 32,height: 32)
+
 					}
 				}
 			}

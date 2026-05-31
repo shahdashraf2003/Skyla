@@ -8,6 +8,7 @@ protocol SavedLocationRepositoryProtocol {
 	func getLocations() -> [SavedLocation]
 	func addLocation(_ location: SavedLocation)
 	func deleteLocation(_ location: SavedLocation)
+	func saveCurrentLocation(name: String, lat: Double, lon: Double)
 }
 
 final class SavedLocationRepository: SavedLocationRepositoryProtocol {
@@ -29,4 +30,19 @@ final class SavedLocationRepository: SavedLocationRepositoryProtocol {
     func deleteLocation(_ location: SavedLocation) {
         service.delete(location)
     }
+	func saveCurrentLocation(name: String, lat: Double, lon: Double) {
+
+		guard !service.exists(lat: lat, lon: lon) else {
+			return
+		}
+
+		let location = SavedLocation(
+			name: name,
+			lat: lat,
+			lon: lon,
+			isCurrent: true
+		)
+
+		service.add(location)
+	}
 }
