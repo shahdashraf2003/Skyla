@@ -13,5 +13,6 @@ enum ViewState {
     case empty
     case locationDenied
     case error(String)
-	
+	case noInternet
+
 }

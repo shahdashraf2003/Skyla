@@ -9,22 +9,24 @@
 import Foundation
 
 protocol APIClientProtocol {
-	func request<T: Codable>(_ endpoint: Endpoint) async throws -> (T,Bool)
+	func request<T: Codable>(_ endpoint: Endpoint) async throws -> T
 }
 
 final class APIClient: APIClientProtocol {
 
 	private let session: URLSession
-	private let cache: URLCache
 
-	init(session :URLSession , cache:URLCache) {
-
-		self.cache = cache
+	init(session: URLSession) {
 		self.session = session
 	}
 
-	func request<T: Codable>(_ endpoint: Endpoint) async throws -> (T ,Bool){
-		guard let url = endpoint.url else { throw NetworkError.invalidURL }
+	func request<T: Codable>(
+		_ endpoint: Endpoint
+	) async throws -> T {
+
+		guard let url = endpoint.url else {
+			throw NetworkError.invalidURL
+		}
 
 		let urlRequest = URLRequest(url: url)
 
@@ -36,29 +38,23 @@ final class APIClient: APIClientProtocol {
 				throw NetworkError.requestFailed
 			}
 
-			let cachedResponse = CachedURLResponse(response: response, data: data)
-			cache.storeCachedResponse(cachedResponse, for: urlRequest)
-			print("api")
-			return try (JSONDecoder().decode(T.self, from: data),false)
+			let decoded = try JSONDecoder().decode(T.self, from: data)
+
+			return decoded
 
 		} catch {
 			if let urlError = error as? URLError {
 				switch urlError.code {
 					case .notConnectedToInternet,
+							.networkConnectionLost,
 							.cannotFindHost,
-							.dnsLookupFailed,
-							.networkConnectionLost:
-						if let cached = cache.cachedResponse(for: urlRequest) {
-							print("cashed")
-							return try (JSONDecoder().decode(T.self, from: cached.data),true)
-						}
-
-
+							.dnsLookupFailed:
 						throw NetworkError.noInternet
 					default:
 						throw error
 				}
 			}
+
 			throw error
 		}
 	}

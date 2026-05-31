@@ -24,18 +24,13 @@ final class AppContainer {
 
 		container.register(APIClientProtocol.self) { _ in
 
-			let cache = URLCache(
-				memoryCapacity: 50 * 1024 * 1024,
-				diskCapacity: 100 * 1024 * 1024
-			)
-
 			let config = URLSessionConfiguration.default
-			config.urlCache = cache
 			config.requestCachePolicy = .reloadIgnoringLocalCacheData
+			config.urlCache = nil
 
 			let session = URLSession(configuration: config)
 
-			return APIClient(session: session, cache: cache)
+			return APIClient(session: session)
 		}
 
         container.register(WeatherServiceProtocol.self) { resolver in
@@ -43,11 +38,15 @@ final class AppContainer {
             return WeatherService(apiClient: client)
         }
 
-		container.register(WeatherRepositoryProtocol.self) { resolver in
-			let service = resolver.resolve(WeatherServiceProtocol.self)!
-			return WeatherRepository(service:service)
-		}
 
+		container.register(WeatherRepositoryProtocol.self) { resolver in
+
+			let service = resolver.resolve(WeatherServiceProtocol.self)!
+
+			return WeatherRepository(
+				service: service
+			)
+		}
 
 		container.register(LocationServiceProtocol.self) { _ in
 			LocationManager()

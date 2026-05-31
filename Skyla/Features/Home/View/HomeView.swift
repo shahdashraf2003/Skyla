@@ -7,6 +7,7 @@
 import SwiftUI
 
 struct HomeView: View {
+
 	let factory = AppContainer.shared.makeFactory()
 	@StateObject var viewModel: HomeViewModel
 	@EnvironmentObject var context: WeatherContext
@@ -24,27 +25,26 @@ struct HomeView: View {
 	var body: some View {
 		NavigationStack {
 			ZStack(alignment: .top) {
+
 				Image(context.theme.backgroundImage)
 					.resizable()
 					.scaledToFill()
 					.ignoresSafeArea()
+
 				TabView(selection: $viewModel.currentLocationIndex) {
 
 					if viewModel.allLocations.isEmpty {
-						locationPage
-							.tag(0)
+						locationPage.tag(0)
 					} else {
 						ForEach(Array(viewModel.allLocations.enumerated()), id: \.offset) { index, _ in
-							locationPage
-								.tag(index)
+							locationPage.tag(index)
 						}
 					}
 				}
 				.tabViewStyle(.page(indexDisplayMode: .never))
-				.onChange(of: viewModel.currentLocationIndex) { _ , index in
+				.onChange(of: viewModel.currentLocationIndex) { _, index in
 					viewModel.navigateToLocation(at: index)
 				}
-
 
 				if viewModel.allLocations.count > 1 {
 					pageIndicator
@@ -55,12 +55,11 @@ struct HomeView: View {
 				viewModel.loadLocations()
 				viewModel.onAppear()
 			}
-			.onChange(of: scenePhase) { _ , phase in
+			.onChange(of: scenePhase) { _, phase in
 				if phase == .active {
 					viewModel.checkLocationPermission()
 					viewModel.forceLocationRefresh()
 				}
-				print("VIEW Context:", ObjectIdentifier(context))
 			}
 			.navigationDestination(item: $viewModel.selectedDay) { day in
 				DayDetailsView(
@@ -75,6 +74,7 @@ struct HomeView: View {
 					}
 				)
 			}
+
 			.toolbar {
 				ToolbarItem(placement: .topBarTrailing) {
 					Button {
@@ -90,12 +90,11 @@ struct HomeView: View {
 	}
 
 
-
 	private var locationPage: some View {
 		ZStack {
 
-
 			switch viewModel.state {
+
 				case .loading:
 					ProgressView()
 						.foregroundColor(foregroundColor)
@@ -109,11 +108,16 @@ struct HomeView: View {
 				case .locationDenied:
 					PermissionDeniedView(
 						openSettingsAction: {
-							guard let url = URL(
-								string: UIApplication.openSettingsURLString
-							) else { return }
+							guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
 							UIApplication.shared.open(url)
 						}
+					)
+
+				case .noInternet:
+					NoInternetView(
+						retry: {
+							await viewModel.refresh()
+						}, foregroundColor: foregroundColor
 					)
 
 				case .error(let message):
@@ -125,6 +129,44 @@ struct HomeView: View {
 		}
 		.foregroundColor(foregroundColor)
 	}
+
+
+	
+
+
+	private var content: some View {
+		ScrollView {
+			VStack(spacing: 24) {
+
+				TopSectionView(
+					locationName: viewModel.locationName,
+					iconURL: viewModel.currentConditionIconURL,
+					temperature: viewModel.currentTemperature,
+					conditionText: viewModel.conditionText,
+					highLowText: viewModel.todayHighLow
+				)
+
+				ForecastSection(
+					foregroundColor: foregroundColor,
+					threeDayForecast: viewModel.threeDayForecast,
+					onSelectDay: { day in
+						viewModel.selectedDay = day.day
+					}
+				)
+
+				infoGrid(
+					infoItems: viewModel.infoItems,
+					foregroundColor: foregroundColor
+				)
+			}
+			.animation(.easeInOut, value: viewModel.isConnected)
+			.padding(.bottom, 48)
+		}
+		.refreshable {
+			await viewModel.refresh()
+		}
+	}
+
 
 	private var pageIndicator: some View {
 		HStack(spacing: 6) {
@@ -151,51 +193,7 @@ struct HomeView: View {
 		.padding(.horizontal, 12)
 		.padding(.vertical, 6)
 		.background(
-			Capsule()
-				.fill(foregroundColor.opacity(0.15))
+			Capsule().fill(foregroundColor.opacity(0.15))
 		)
 	}
-
-
-	private var content: some View {
-		ScrollView {
-			VStack(spacing: 24) {
-				if viewModel.isShowingCachedData {
-					CachedBannerView(
-						foreground: foregroundColor,
-						backgound: backgroundColor
-					)
-					.transition(.move(edge: .top).combined(with: .opacity))
-				}
-
-				TopSectionView(
-					locationName: viewModel.locationName,
-					iconURL: viewModel.currentConditionIconURL,
-					temperature: viewModel.currentTemperature,
-					conditionText: viewModel.conditionText,
-					highLowText: viewModel.todayHighLow
-				)
-
-				ForecastSection(
-					foregroundColor: foregroundColor,
-					threeDayForecast: viewModel.threeDayForecast,
-					onSelectDay: { day in
-						viewModel.selectedDay = day.day
-					}
-				)
-
-				infoGrid(
-					infoItems: viewModel.infoItems,
-					foregroundColor: foregroundColor
-				)
-			}
-			.animation(.easeInOut, value: viewModel.isConnected)
-			.padding(.bottom, 48) 
-		}
-		.refreshable {
-			await viewModel.refresh()
-		}
-	}
-
-	
 }
