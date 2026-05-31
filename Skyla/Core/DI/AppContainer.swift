@@ -8,6 +8,7 @@
 
 import Swinject
 import Foundation
+import SwiftData
 
 final class AppContainer {
 
@@ -23,18 +24,13 @@ final class AppContainer {
 
 		container.register(APIClientProtocol.self) { _ in
 
-			let cache = URLCache(
-				memoryCapacity: 50 * 1024 * 1024,
-				diskCapacity: 100 * 1024 * 1024
-			)
-
 			let config = URLSessionConfiguration.default
-			config.urlCache = cache
 			config.requestCachePolicy = .reloadIgnoringLocalCacheData
+			config.urlCache = nil
 
 			let session = URLSession(configuration: config)
 
-			return APIClient(session: session, cache: cache)
+			return APIClient(session: session)
 		}
 
         container.register(WeatherServiceProtocol.self) { resolver in
@@ -42,29 +38,77 @@ final class AppContainer {
             return WeatherService(apiClient: client)
         }
 
-		container.register(WeatherRepositoryProtocol.self) { resolver in
-			let service = resolver.resolve(WeatherServiceProtocol.self)!
-			return WeatherRepository(service:service)
-		}
 
+		container.register(WeatherRepositoryProtocol.self) { resolver in
+
+			let service = resolver.resolve(WeatherServiceProtocol.self)!
+
+			return WeatherRepository(
+				service: service
+			)
+		}
 
 		container.register(LocationServiceProtocol.self) { _ in
 			LocationManager()
 		}.inObjectScope(.container)
 
+		container.register(WeatherContext.self) { _ in
+			WeatherContext()
+		}.inObjectScope(.container)
+
+		
 		container.register(HomeViewModel.self) { resolver in
 			let repo = resolver.resolve(WeatherRepositoryProtocol.self)!
 			let locationService = resolver.resolve(LocationServiceProtocol.self)!
+			let savedLocationRepo = resolver.resolve(SavedLocationRepositoryProtocol.self)!
+			let weatherContext = resolver.resolve(WeatherContext.self)!
+
 			return HomeViewModel(
 				weatherRepository: repo,
-				locationService:  locationService
+				locationService: locationService,
+				savedLocationRepository: savedLocationRepo,
+				weatherContext: weatherContext
 			)
 		}
 
-		container.register(DayDetailsViewModel.self) { (_, day: ForecastDay) in
-			return DayDetailsViewModel(day: day)
+		container.register(DayDetailsViewModel.self) { (resolver, day: ForecastDay) in
+
+			let weatherContext = resolver.resolve(WeatherContext.self)!
+
+			return DayDetailsViewModel(
+				day: day,
+				localTime: weatherContext.localTime!
+			)
 		}
 
 
+		container.register(ModelContainer.self) { _ in
+			try! ModelContainer(for: SavedLocation.self)
+		}
+		.inObjectScope(.container)
+
+
+		container.register(SavedLocationServiceProtocol.self) { resolver in
+			let container = resolver.resolve(ModelContainer.self)!
+			return SavedLocationService(context: container.mainContext)
+		}
+
+
+		container.register(SavedLocationRepositoryProtocol.self) { resolver in
+			let service = resolver.resolve(SavedLocationServiceProtocol.self)!
+			return SavedLocationRepository(service: service)
+		}
+
+
+		container.register(SavedLocationsViewModel.self) { resolver in
+			let repo = resolver.resolve(SavedLocationRepositoryProtocol.self)!
+			return SavedLocationsViewModel(repo: repo)
+		}
+
     }
+	func makeFactory() -> ViewModelFactoryProtocol {
+		AppViewModelFactory(container: container)
+	}
+
 }
+

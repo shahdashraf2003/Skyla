@@ -10,21 +10,8 @@ import SwiftUI
 
 struct HourGroupView: View {
 
-	let group: [HourWeather]
-
-	private var models: [HourUIModel] {
-		group.map { hour in
-			let date = DateHelper.parseDateTime(hour.time)
-
-			let isNow = Calendar.current.isDate(date, equalTo: Date(), toGranularity: .hour)
-
-			return HourUIModel(
-				hour: hour,
-				isNow: isNow, displayTitle: isNow ? "Now" : DateHelper
-					.formatTime(hour.time)
-			)
-		}
-	}
+	let group: [HourUIModel]
+	let backgroundColor : Color
 
 	var body: some View {
 
@@ -35,9 +22,10 @@ struct HourGroupView: View {
 				.opacity(0.6)
 			Divider()
 				.background(.foreground.opacity(0.7))
-			ForEach(models) { model in
+			ForEach(group) { model in
 				HourCell(
-					hour: model
+					hour: model,
+					backgroundColor: backgroundColor
 
 				)
 			}
@@ -51,6 +39,9 @@ struct HourGroupView: View {
 
 	private var groupTitle: String {
 		guard let first = group.first else { return "" }
-		return DateHelper.formatTime(first.time)
+
+		return DateHelper.formatTime(
+			first.hour.time
+		)
 	}
 }

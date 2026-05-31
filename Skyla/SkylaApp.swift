@@ -11,13 +11,16 @@ import Swinject
 
 @main
 struct SkylaApp: App {
+	@StateObject var weatherContext = AppContainer.shared.container.resolve(WeatherContext.self)!
+	let factory  = AppContainer.shared.makeFactory()
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
-            Item.self,
+			SavedLocation.self,
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
         do {
+			
             return try ModelContainer(for: schema, configurations: [modelConfiguration])
         } catch {
             fatalError("Could not create ModelContainer: \(error)")
@@ -26,10 +29,12 @@ struct SkylaApp: App {
 
     var body: some Scene {
         WindowGroup {
+
 			HomeView(
-				viewModel: AppContainer.shared.container.resolve(HomeViewModel.self)!
+				viewModel: factory.makeHomeViewModel()
 			)
-        }
+			.environmentObject(weatherContext)
+		}
         .modelContainer(sharedModelContainer)
     }
 }

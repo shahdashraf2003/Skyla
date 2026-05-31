@@ -5,79 +5,138 @@
 //  Created by Shahd Ashraf on 28/05/2026.
 //
 import SwiftUI
-internal import _LocationEssentials
 
 struct HomeView: View {
 
+	let factory = AppContainer.shared.makeFactory()
 	@StateObject var viewModel: HomeViewModel
+	@EnvironmentObject var context: WeatherContext
+
 	var foregroundColor: Color {
-		viewModel.theme == .day ? .black : .white
+		context.theme == .day ? .black : .white
+	}
+
+	var backgroundColor: Color {
+		context.theme == .day ? .white : .black
 	}
 
 	@Environment(\.scenePhase) private var scenePhase
+
 	var body: some View {
 		NavigationStack {
-			ZStack {
-				Image(viewModel.backgroundImageName)
+			ZStack(alignment: .top) {
+
+				Image(context.theme.backgroundImage)
 					.resizable()
 					.scaledToFill()
 					.ignoresSafeArea()
 
-				switch viewModel.state {
+				TabView(selection: $viewModel.currentLocationIndex) {
 
-					case .loading:
-						ProgressView()
+					if viewModel.allLocations.isEmpty {
+						locationPage.tag(0)
+					} else {
+						ForEach(Array(viewModel.allLocations.enumerated()), id: \.offset) { index, _ in
+							locationPage.tag(index)
+						}
+					}
+				}
+				.tabViewStyle(.page(indexDisplayMode: .never))
+				.onChange(of: viewModel.currentLocationIndex) { _, index in
+					viewModel.navigateToLocation(at: index)
+				}
 
-					case .loaded:
-						content
-
-					case .empty:
-						EmptyStateView()
-
-					case .locationDenied:
-						PermissionDeniedView(
-							openSettingsAction: {
-								guard let url = URL(
-									string: UIApplication.openSettingsURLString
-								) else { return }
-								UIApplication.shared.open(url)
-							}
-						)
-
-					case .error(let message):
-						ErrorView(
-							message: message,
-							retryAction: {
-								viewModel.onAppear()
-							}
-						)
+				if viewModel.allLocations.count > 1 {
+					pageIndicator
+						.padding(.bottom, 16)
 				}
 			}
-			.foregroundColor(foregroundColor)
 			.onAppear {
+				viewModel.loadLocations()
 				viewModel.onAppear()
 			}
-			.onChange(of: scenePhase) { phase in
+			.onChange(of: scenePhase) { _, phase in
 				if phase == .active {
 					viewModel.checkLocationPermission()
+					viewModel.forceLocationRefresh()
 				}
-			}.navigationDestination(item: $viewModel.selectedDay) { day in
+			}
+			.navigationDestination(item: $viewModel.selectedDay) { day in
 				DayDetailsView(
-					viewModel: DayDetailsViewModel(day: day)
+					viewModel: factory.makeDayDetailsViewModel(day: day)
 				)
+			}
+			.navigationDestination(isPresented: $viewModel.showSavedLocations) {
+				SavedLocationsView(
+					viewModel: factory.makeSavedLocationsViewModel(),
+					onSelectLocation: { location in
+						viewModel.selectLocation(location)
+					}
+				)
+			}
+
+			.toolbar {
+				ToolbarItem(placement: .topBarTrailing) {
+					Button {
+						viewModel.showSavedLocations = true
+					} label: {
+						Image(.music)
+							.resizable()
+							.frame(width: 32, height: 32)
+					}
+				}
 			}
 		}
 	}
 
 
+	private var locationPage: some View {
+		ZStack {
+
+			switch viewModel.state {
+
+				case .loading:
+					ProgressView()
+						.foregroundColor(foregroundColor)
+
+				case .loaded:
+					content
+
+				case .empty:
+					EmptyStateView()
+
+				case .locationDenied:
+					PermissionDeniedView(
+						openSettingsAction: {
+							guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
+							UIApplication.shared.open(url)
+						}
+					)
+
+				case .noInternet:
+					NoInternetView(
+						retry: {
+							await viewModel.refresh()
+						}, foregroundColor: foregroundColor
+					)
+
+				case .error(let message):
+					ErrorView(
+						message: message,
+						retryAction: { viewModel.onAppear() }
+					)
+			}
+		}
+		.foregroundColor(foregroundColor)
+	}
+
+
+	
+
+
 	private var content: some View {
 		ScrollView {
 			VStack(spacing: 24) {
-
-				if viewModel.isShowingCachedData {
-					CachedBannerView()
-						.transition(.move(edge: .top).combined(with: .opacity))
-				}
 
 				TopSectionView(
 					locationName: viewModel.locationName,
@@ -101,10 +160,40 @@ struct HomeView: View {
 				)
 			}
 			.animation(.easeInOut, value: viewModel.isConnected)
-			.padding(.bottom, 32)
+			.padding(.bottom, 48)
 		}
 		.refreshable {
-			viewModel.refresh()
+			await viewModel.refresh()
 		}
+	}
+
+
+	private var pageIndicator: some View {
+		HStack(spacing: 6) {
+			ForEach(Array(viewModel.allLocations.enumerated()), id: \.offset) { index, location in
+				if location.isCurrent {
+					Image(systemName: "location.fill")
+						.font(.system(size: 8))
+						.foregroundColor(
+							index == viewModel.currentLocationIndex
+							? foregroundColor
+							: foregroundColor.opacity(0.4)
+						)
+				} else {
+					Circle()
+						.fill(
+							index == viewModel.currentLocationIndex
+							? foregroundColor
+							: foregroundColor.opacity(0.4)
+						)
+						.frame(width: 8, height: 8)
+				}
+			}
+		}
+		.padding(.horizontal, 12)
+		.padding(.vertical, 6)
+		.background(
+			Capsule().fill(foregroundColor.opacity(0.15))
+		)
 	}
 }

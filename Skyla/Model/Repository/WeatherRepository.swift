@@ -6,18 +6,38 @@
 //
 
 protocol WeatherRepositoryProtocol {
-	func getWeather(lat: Double, lon: Double, days: Int) async throws -> (WeatherResponse,Bool)
+	func getWeather(lat: Double, lon: Double, days: Int) async throws -> WeatherResponse
 }
 
 final class WeatherRepository: WeatherRepositoryProtocol {
 
-    private let service: WeatherServiceProtocol
+	private let service: WeatherServiceProtocol
 
-    init(service: WeatherServiceProtocol) {
-        self.service = service
-    }
 
-    func getWeather(lat: Double, lon: Double, days: Int) async throws -> (WeatherResponse,Bool){
-        return try await service.getForecast(lat: lat, lon: lon, days: days)
-    }
+	init(
+		service: WeatherServiceProtocol,
+	) {
+		self.service = service
+	}
+
+	func getWeather(
+		lat: Double,
+		lon: Double,
+		days: Int
+	) async throws -> WeatherResponse {
+
+		do {
+			let weather = try await service.getForecast(
+				lat: lat,
+				lon: lon,
+				days: days
+			)
+
+			return weather
+
+		} catch {
+			
+			throw error
+		}
+	}
 }

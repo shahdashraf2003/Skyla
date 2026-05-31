@@ -9,15 +9,13 @@ import Foundation
 import SwiftUI
 
 
-struct ThemeHelper {
+	struct ThemeHelper {
 
-    static func currentTheme() -> WeatherTheme {
-        let hour = Calendar.current.component(.hour, from: Date())
-        return (hour >= 5 && hour < 18) ? .day : .night
-    }
+		static func theme(hour: Int) -> WeatherTheme {
+			(hour >= 5 && hour < 18) ? .day : .night
+		}
 
-	static func opColorTheme() -> Color {
-		let hour = Calendar.current.component(.hour, from: Date())
-		return (hour >= 5 && hour < 18) ? .white : .black
+		static func opColorTheme(hour: Int) -> Color {
+			(hour >= 5 && hour < 18) ? .white : .black
+		}
 	}
-}

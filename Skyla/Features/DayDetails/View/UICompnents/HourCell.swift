@@ -9,8 +9,9 @@
 import SwiftUI
 
 struct HourCell: View {
-
+	@EnvironmentObject var weatherContext: WeatherContext
 	let hour: HourUIModel
+	let backgroundColor : Color
     var body: some View {
 
         HStack {
@@ -29,8 +30,7 @@ struct HourCell: View {
 			Text("\(Int(hour.hour.tempC))°")
 				.font(.title)
 				.fontWeight(.bold)
-				.foregroundColor(ThemeHelper.opColorTheme())
-
+				.foregroundColor(backgroundColor)
 
 		}
     }

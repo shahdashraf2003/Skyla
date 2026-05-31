@@ -11,10 +11,12 @@ import Combine
 @MainActor
 final class DayDetailsViewModel: ObservableObject {
 
+	let localTime: String?
 	let day: ForecastDay
 
-	init(day: ForecastDay) {
+	init(day: ForecastDay,localTime :String) {
 		self.day = day
+		self.localTime = localTime
 		print("day.date =", day.date)
 		print("parsed =", DateHelper.parseDayDate(day.date))
 		print("today =", Date())
@@ -27,16 +29,27 @@ final class DayDetailsViewModel: ObservableObject {
 
 	private var isToday: Bool {
 
-		let dayDate = Calendar.current.startOfDay(
+		guard let currentLocationDate =
+				WeatherTimeProvider(localTime: localTime).date
+		else {
+			return false
+		}
+
+		let forecastDate = Calendar.current.startOfDay(
 			for: DateHelper.parseDayDate(day.date)
 		)
 
-		let today = Calendar.current.startOfDay(for: Date())
-		return dayDate == today
+		let currentDate = Calendar.current.startOfDay(
+			for: currentLocationDate
+		)
+
+		return forecastDate == currentDate
 	}
 
 	private var currentHour: Int {
-		Calendar.current.component(.hour, from: Date())
+		WeatherTimeProvider(
+			localTime: localTime
+		).hour
 	}
 	var hourlyForecast: [HourWeather] {
 
@@ -46,7 +59,7 @@ final class DayDetailsViewModel: ObservableObject {
 			return cleaned
 		}
 
-		let nowHour = Calendar.current.component(.hour, from: Date())
+		let nowHour = currentHour
 
 		return cleaned.filter { hour in
 			let date = DateHelper.parseDateTime(hour.time)
@@ -76,9 +89,9 @@ final class DayDetailsViewModel: ObservableObject {
 	}
 
 
-	var groupedHours: [[HourWeather]] {
+	var groupedHours: [[HourUIModel]] {
 
-		let hours = hourlyForecast
+		let hours = hourlyUI
 
 		return stride(from: 0, to: hours.count, by: 3).map { index in
 			Array(hours[index..<min(index + 3, hours.count)])
@@ -104,14 +117,8 @@ final class DayDetailsViewModel: ObservableObject {
 		)
 	}
 
-	var theme: WeatherTheme {
-		ThemeHelper.currentTheme()
-	}
 
-	var backgroundImageName: String {
-		theme.backgroundImage
-	}
-
+	
 	private func removeDuplicates(from hours: [HourWeather]) -> [HourWeather] {
 
 		var seen = Set<String>()
