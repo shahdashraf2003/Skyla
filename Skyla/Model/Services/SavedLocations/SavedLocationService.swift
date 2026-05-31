@@ -23,6 +23,7 @@ final class SavedLocationService: SavedLocationServiceProtocol {
 
 		let current = locations.filter(\.isCurrent)
 		let others = locations.filter { !$0.isCurrent}
+			.sorted { $0.name < $1.name }
 		return current + others
 	}
 

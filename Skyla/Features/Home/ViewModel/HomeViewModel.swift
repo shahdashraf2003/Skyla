@@ -141,14 +141,22 @@ final class HomeViewModel: ObservableObject {
 		if let index = allLocations.firstIndex(where: { $0.id == location.id }) {
 			currentLocationIndex = index
 		}
-
+		state = .loading
 		if location.isCurrent {
+
 			isViewingSelectedLocation = false
 			currentGPSLocation = nil
+
+			if locationService.authorizationDenied {
+				state = .locationDenied
+				return
+			}
+
 			state = .loading
 			locationService.requestLocation()
 			return
 		}
+
 
 		isViewingSelectedLocation = true
 
@@ -220,7 +228,8 @@ final class HomeViewModel: ObservableObject {
 	) {
 		fetchTask?.cancel()
 		state = .loading
-
+		print(lat,lon)
+		print(locationName)
 		fetchTask = Task {
 			do {
 				let weather = try await weatherRepository.getWeather(
