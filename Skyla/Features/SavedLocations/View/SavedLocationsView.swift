@@ -10,7 +10,8 @@ struct SavedLocationsView: View {
 	@EnvironmentObject var weatherContext: WeatherContext
 	@StateObject var viewModel: SavedLocationsViewModel
 	@State private var locationToDelete: SavedLocation?
-	let onSelectLocation: (SavedLocation) -> Void 
+	let factory = AppContainer.shared.makeFactory()
+	let onSelectLocation: (SavedLocation) -> Void
 	var foregroundColor: Color {
 		weatherContext.theme == .day ? .black : .white
 	}
@@ -67,6 +68,11 @@ struct SavedLocationsView: View {
 
 			}
 		}
+		.navigationDestination(isPresented: $viewModel.navigateToExplore) {
+			ExploreLocationsView(
+				viewModel: factory.makeExploreLocationsViewModel()
+			)
+		}
 		.confirmationDialog(
 			"Remove \(locationToDelete?.name ?? "")?",
 			isPresented: Binding(
@@ -89,7 +95,7 @@ struct SavedLocationsView: View {
 		}
 		.overlay(alignment: .bottomTrailing) {
 			Button {
-				viewModel.showAddLocation = true
+				viewModel.addTapped()
 			} label: {
 				Image(systemName: "plus")
 					.font(.title2)

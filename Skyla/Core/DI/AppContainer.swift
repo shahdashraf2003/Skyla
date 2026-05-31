@@ -105,6 +105,11 @@ final class AppContainer {
 			return SavedLocationsViewModel(repo: repo)
 		}
 
+		container.register(ExploreLocationsViewModel.self) { resolver in
+			let repo = resolver.resolve(WeatherRepositoryProtocol.self)!
+			return ExploreLocationsViewModel(repository:repo )
+		}
+
     }
 	func makeFactory() -> ViewModelFactoryProtocol {
 		AppViewModelFactory(container: container)

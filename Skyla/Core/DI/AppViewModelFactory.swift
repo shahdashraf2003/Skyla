@@ -27,4 +27,8 @@ final class AppViewModelFactory: ViewModelFactoryProtocol {
     func makeSavedLocationsViewModel() -> SavedLocationsViewModel {
         container.resolve(SavedLocationsViewModel.self)!
     }
+
+	func makeExploreLocationsViewModel() -> ExploreLocationsViewModel {
+		container.resolve(ExploreLocationsViewModel.self)!
+	}
 }

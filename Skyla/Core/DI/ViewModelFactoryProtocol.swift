@@ -12,8 +12,11 @@ protocol ViewModelFactoryProtocol {
 
 	func makeHomeViewModel() -> HomeViewModel
 
-    func makeDayDetailsViewModel(day: ForecastDay) -> DayDetailsViewModel
+	func makeDayDetailsViewModel(day: ForecastDay) -> DayDetailsViewModel
 
-    func makeSavedLocationsViewModel() -> SavedLocationsViewModel
+	func makeSavedLocationsViewModel() -> SavedLocationsViewModel
+
+	func makeExploreLocationsViewModel() -> ExploreLocationsViewModel
+
+
 }
-
