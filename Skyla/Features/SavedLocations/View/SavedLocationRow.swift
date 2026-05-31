@@ -28,7 +28,8 @@ struct SavedLocationRow: View {
 					if location.isCurrent{
 
                         Image(systemName: "location.fill")
-                            .foregroundColor(.blue)
+							.foregroundColor(.orange)
+							.fontWeight(.heavy)
                     }
                 }
 
@@ -48,10 +49,18 @@ struct SavedLocationRow: View {
                     deleteAction()
                 } label: {
                     Image(systemName: "trash")
+						.foregroundColor(foregroundColor)
+
+
                 }
             }
         }
         .foregroundColor(foregroundColor)
-        .padding(.vertical, 8)
+		.padding()
+		.background(
+			RoundedRectangle(cornerRadius: 16)
+				.fill(foregroundColor.opacity(0.08))
+		)
+
     }
 }

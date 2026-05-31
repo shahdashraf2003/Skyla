@@ -37,6 +37,7 @@ final class HomeViewModel: ObservableObject {
 		bindLocation()
 		bindNetwork()
 		bindAuthorization()
+		print(locationName)
 	}
 
 	private func bindLocation() {
@@ -45,14 +46,6 @@ final class HomeViewModel: ObservableObject {
 			.sink { [weak self] location in
 				guard let self else { return }
 				self.lastLocation = location.coordinate
-				self.savedLocationRepository.saveCurrentLocation(
-					name: locationName,
-					lat: location.coordinate.latitude,
-					lon: location.coordinate.longitude,
-					
-
-				)
-				
 				self.fetchWeather(
 					lat: location.coordinate.latitude,
 					lon: location.coordinate.longitude
@@ -147,6 +140,7 @@ final class HomeViewModel: ObservableObject {
 				}
 
 				weather = result.0
+				saveCurrentLocation(from: result.0)
 				isShowingCachedData = result.1
 				state = .loaded
 
@@ -243,5 +237,13 @@ final class HomeViewModel: ObservableObject {
 
 	private func makeIconURL(from icon: String?) -> URL? {
 		return URLHelper.weatherIconURL(icon)
+	}
+
+	private func saveCurrentLocation(from weather: WeatherResponse) {
+		savedLocationRepository.saveCurrentLocation(
+			name: weather.location.name,
+			lat: weather.location.lat,
+			lon: weather.location.lon
+		)
 	}
 }

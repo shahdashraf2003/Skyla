@@ -32,17 +32,6 @@ final class SavedLocationRepository: SavedLocationRepositoryProtocol {
     }
 	func saveCurrentLocation(name: String, lat: Double, lon: Double) {
 
-		guard !service.exists(lat: lat, lon: lon) else {
-			return
-		}
-
-		let location = SavedLocation(
-			name: name,
-			lat: lat,
-			lon: lon,
-			isCurrent: true
-		)
-
-		service.add(location)
+		service.saveCurrentLocation(name: name, lat: lat, lon: lon)
 	}
 }

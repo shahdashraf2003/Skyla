@@ -11,4 +11,6 @@ protocol SavedLocationServiceProtocol {
 	func add(_ location: SavedLocation)
 	func delete(_ location: SavedLocation)
 	func exists(lat: Double, lon: Double) -> Bool
+	func saveCurrentLocation(name: String,lat: Double,lon: Double)
+
 }

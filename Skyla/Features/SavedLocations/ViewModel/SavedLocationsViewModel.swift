@@ -24,8 +24,7 @@ final class SavedLocationsViewModel: ObservableObject {
 	func load() {
 		locations = repo.getLocations()
 	}
-
-
+	
 	func delete(_ item: SavedLocation) {
 		repo.deleteLocation(item)
 		load()
@@ -37,4 +36,6 @@ final class SavedLocationsViewModel: ObservableObject {
 	var backgroundImageName: String {
 		theme.backgroundImage
 	}
+
+	
 }
