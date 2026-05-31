@@ -30,6 +30,7 @@ final class HomeViewModel: ObservableObject {
 	@Published var allLocations: [SavedLocation] = []
 	@Published var currentLocationIndex: Int = 0
 	private let weatherContext: WeatherContext
+	@Published private(set) var weatherByLocation: [UUID: WeatherResponse] = [:]
 
 	init(
 		weatherRepository: WeatherRepositoryProtocol,
@@ -210,6 +211,10 @@ final class HomeViewModel: ObservableObject {
 				}
 				
 				weather = result.0
+				if allLocations.indices.contains(currentLocationIndex) {
+					let locationId = allLocations[currentLocationIndex].id
+					weatherByLocation[locationId] = result.0
+				}
 				isShowingCachedData = result.1
 				state = .loaded
 				weatherContext.updateTime(result.0.location.localtime)
