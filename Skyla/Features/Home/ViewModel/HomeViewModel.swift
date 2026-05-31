@@ -127,21 +127,11 @@ final class HomeViewModel: ObservableObject {
 		}
 
 		if location.isCurrent {
-
 			isViewingSelectedLocation = false
-
-			if let gps = currentGPSLocation {
-				fetchWeather(
-					lat: gps.latitude,
-					lon: gps.longitude
-				)
-			} else {
-				locationService.requestLocation()
-			}
-
+			currentGPSLocation = nil
+			locationService.requestLocation()
 			return
 		}
-
 		isViewingSelectedLocation = true
 
 		fetchWeather(
