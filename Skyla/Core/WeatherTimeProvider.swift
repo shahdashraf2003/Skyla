@@ -23,4 +23,13 @@ struct WeatherTimeProvider {
 
         return Calendar.current.component(.hour, from: date)
     }
+
+	var date: Date? {
+		guard let localTime else { return nil }
+
+		let formatter = DateFormatter()
+		formatter.dateFormat = "yyyy-MM-dd HH:mm"
+
+		return formatter.date(from: localTime)
+	}
 }

@@ -71,8 +71,14 @@ final class AppContainer {
 			)
 		}
 
-		container.register(DayDetailsViewModel.self) { (_, day: ForecastDay) in
-			return DayDetailsViewModel(day: day)
+		container.register(DayDetailsViewModel.self) { (resolver, day: ForecastDay) in
+
+			let weatherContext = resolver.resolve(WeatherContext.self)!
+
+			return DayDetailsViewModel(
+				day: day,
+				localTime: weatherContext.localTime!
+			)
 		}
 
 

@@ -10,7 +10,7 @@ import SwiftUI
 
 struct HourlyForecastView: View {
 
-    let hours: [[HourWeather]]
+	let hours: [[HourUIModel]]
 	let backgroundColor : Color
 	var body: some View {
 		
