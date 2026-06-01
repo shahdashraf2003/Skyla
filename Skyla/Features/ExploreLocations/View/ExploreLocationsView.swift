@@ -23,16 +23,23 @@ struct ExploreLocationsView: View {
 				.padding()
 			
 			
-			ScrollView(.horizontal, showsIndicators: false) {
-					HStack {
-							ForEach(viewModel.suggested) { item in
-								LocationChip(title: item.name) {
-									//onSelectLocation(item)
-								}
-							}
-				}.padding(.horizontal)
-				 }
-				 
+			ScrollView(.vertical, showsIndicators: false) {
+
+				let columns = [
+					GridItem(.adaptive(minimum: 90), spacing: 4)
+				]
+
+				LazyVGrid(columns: columns, spacing: 12) {
+					ForEach(viewModel.suggested, id: \.self) { item in
+						LocationChip(title: item) {
+							//viewModel.selectSuggestedCity(item)
+						}
+						.frame(minWidth: 80, maxWidth: .infinity)
+					}
+				}
+				
+			}
+
 				 
 				 List(viewModel.results) { item in
 					 VStack(alignment: .leading) {
