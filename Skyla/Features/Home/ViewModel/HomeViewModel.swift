@@ -339,4 +339,10 @@ final class HomeViewModel: ObservableObject {
 		guard let current = weather?.current else { return [] }
 		return WeatherInfoMapper.map(from: current)
 	}
+
+	func viewWeather(lat: Double, lon: Double, name: String) {
+		showSavedLocations = false
+		isViewingSelectedLocation = true
+		fetchWeather(lat: lat, lon: lon, saveAsCurrent: false)
+	}
 }

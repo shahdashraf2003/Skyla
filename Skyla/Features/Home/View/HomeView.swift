@@ -71,10 +71,16 @@ struct HomeView: View {
 					viewModel: factory.makeSavedLocationsViewModel(),
 					onSelectLocation: { location in
 						viewModel.selectLocation(location)
+					},
+					onViewWeather: { city, location in
+						viewModel.viewWeather(
+							lat: city.lat,
+							lon: city.lon,
+							name: city.name
+						)
 					}
 				)
 			}
-
 			.toolbar {
 				ToolbarItem(placement: .topBarTrailing) {
 					Button {

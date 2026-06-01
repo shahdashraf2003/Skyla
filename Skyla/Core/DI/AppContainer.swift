@@ -107,7 +107,13 @@ final class AppContainer {
 
 		container.register(ExploreLocationsViewModel.self) { resolver in
 			let repo = resolver.resolve(WeatherRepositoryProtocol.self)!
-			return ExploreLocationsViewModel(repository:repo )
+			let savedLocationRepo = resolver.resolve(SavedLocationRepositoryProtocol.self)!
+			let weatherContext = resolver.resolve(WeatherContext.self)!
+			return ExploreLocationsViewModel(
+				repository:repo,
+				savedLocationRepository: savedLocationRepo,
+				weatherContext: weatherContext
+			)
 		}
 
     }
