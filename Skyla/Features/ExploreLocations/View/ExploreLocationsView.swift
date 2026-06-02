@@ -32,39 +32,34 @@ struct ExploreLocationsView: View {
                 SearchBar(query: $viewModel.query,foregroundColor: foregroundColor,horizontalPadding: horizontalPadding)
             
                 ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 10) {
+                    HStack(spacing: 12) {
+
                         ForEach(viewModel.suggested, id: \.self) { item in
-                            LocationChip(title: item ,foregroundColor: foregroundColor) {
+                            SuggestedCityCardImproved(
+                                title: item,
+                                foregroundColor: foregroundColor
+                            ) {
                                 viewModel.selectSuggestedByName(item)
-                            
                             }
                         }
                     }
                     .padding(.horizontal)
                 }
-                List {
+                ScrollView {
+                    VStack(spacing: 12) {
 
-                    ForEach(viewModel.results) { item in
-                        VStack(alignment: .leading, spacing: 4) {
-
-                            Text(item.name)
-                                .font(.headline)
-                                .foregroundColor(foregroundColor)
-
-                            Text(item.country)
-                                .font(.caption)
-                                .foregroundColor(foregroundColor.opacity(0.7))
+                        ForEach(viewModel.results) { item in
+                            CityResultCardImproved(
+                                item: item,
+                                foregroundColor: foregroundColor
+                            ) {
+                                viewModel.selectCity(item)
+                            }
+                            .transition(.move(edge: .bottom).combined(with: .opacity))
+                           
                         }
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            viewModel.selectCity(item)
-                        }
-                        .listRowBackground(Color.clear)
-                        .listRowSeparator(.hidden)
-                        .listRowInsets(
-                            EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16)
-                        )
                     }
+                    .padding(.horizontal)
                 }
                 .scrollContentBackground(.hidden)
                 if viewModel.isLoadingCity {
