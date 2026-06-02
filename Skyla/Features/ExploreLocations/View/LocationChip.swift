@@ -11,14 +11,16 @@ import SwiftUI
 struct LocationChip: View {
 
     let title: String
+    let foregroundColor: Color?
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
             Text(title)
+                .foregroundColor(foregroundColor)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
-                .background(Color.blue.opacity(0.2))
+                .background(foregroundColor.opacity(0.08))
                 .clipShape(Capsule())
         }
     }

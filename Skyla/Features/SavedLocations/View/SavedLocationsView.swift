@@ -134,6 +134,6 @@ struct SavedLocationsView: View {
 			}
 		}
 
-		return ExploreLocationsView(viewModel: vm)
+        return ExploreLocationsView(viewModel: vm)
 	}
 }
