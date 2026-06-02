@@ -21,6 +21,7 @@ enum Endpoint {
 				let urlString = """
 			https://api.weatherapi.com/v1/forecast.json?key=\(apiKey)&q=\(lat),\(lon)&days=\(days)&aqi=yes&alerts=no
 			"""
+            print(urlString)
 				return URL(string: urlString)
 
 			case .search(let query):

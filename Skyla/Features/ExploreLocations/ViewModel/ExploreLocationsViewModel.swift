@@ -78,6 +78,7 @@ final class ExploreLocationsViewModel: ObservableObject {
 			lon: city.lon,
 			isCurrent: false
 		)
+    
 		savedLocationRepository.addLocation(location)
 		onAddToSaved?(city)
 		shouldDismiss = true

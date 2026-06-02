@@ -6,7 +6,8 @@
 //
 import Foundation
 import Combine
-import _LocationEssentials
+import CoreLocation
+
 
 @MainActor
 final class HomeViewModel: ObservableObject {
@@ -231,7 +232,7 @@ final class HomeViewModel: ObservableObject {
 					lon: lon,
 					days: 3
 				)
-
+                print(lat , lon)
 				guard !Task.isCancelled else { return }
 
 				guard !weather.forecast.forecastday.isEmpty else {
