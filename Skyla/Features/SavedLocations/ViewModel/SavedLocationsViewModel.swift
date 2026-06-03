@@ -15,7 +15,7 @@ final class SavedLocationsViewModel: ObservableObject {
 	private let repo: SavedLocationRepositoryProtocol
 
 	@Published var locations: [SavedLocation] = []
-	@Published var showAddLocation = false
+	@Published var navigateToExplore = false
 	init(repo: SavedLocationRepositoryProtocol) {
 		self.repo = repo
 		load()
@@ -34,5 +34,8 @@ final class SavedLocationsViewModel: ObservableObject {
 		load()
 	}
 
+	func addTapped() {
+		navigateToExplore = true
+	}
 
 }

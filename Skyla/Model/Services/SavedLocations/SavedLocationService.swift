@@ -28,8 +28,18 @@ final class SavedLocationService: SavedLocationServiceProtocol {
 	}
 
     func add(_ item: SavedLocation) {
+
+        let exists = fetch().contains {
+            abs($0.lat - item.lat) < 0.0001 &&
+            abs($0.lon - item.lon) < 0.0001
+        }
+
+        guard !exists else {
+            return
+        }
+
         context.insert(item)
-		try? context.save()
+        try? context.save()
     }
 
     func delete(_ item: SavedLocation) {

@@ -7,10 +7,14 @@
 
 import SwiftUI
 struct SavedLocationsView: View {
+	@Environment(\.dismiss) private var dismiss
 	@EnvironmentObject var weatherContext: WeatherContext
 	@StateObject var viewModel: SavedLocationsViewModel
 	@State private var locationToDelete: SavedLocation?
-	let onSelectLocation: (SavedLocation) -> Void 
+	let factory = AppContainer.shared.makeFactory()
+	let onSelectLocation: (SavedLocation) -> Void
+	let onViewWeather: (City, Location) -> Void
+
 	var foregroundColor: Color {
 		weatherContext.theme == .day ? .black : .white
 	}
@@ -28,8 +32,7 @@ struct SavedLocationsView: View {
 			if viewModel.isEmpty {
 				EmptySavedLocationsView(foregroundColor: foregroundColor)
 			} else {
-
-				List{
+				List {
 					ForEach(viewModel.locations) { location in
 						SavedLocationRow(
 							location: location,
@@ -64,8 +67,10 @@ struct SavedLocationsView: View {
 				.environment(\.defaultMinListRowHeight, 0)
 				.scrollContentBackground(.hidden)
 				.padding(.horizontal, weatherContext.theme == .night ? 40 : 0)
-
 			}
+		}
+		.navigationDestination(isPresented: $viewModel.navigateToExplore) {
+			exploreView  // ← هنا بنستخدم exploreView مش factory مباشرة
 		}
 		.confirmationDialog(
 			"Remove \(locationToDelete?.name ?? "")?",
@@ -89,7 +94,7 @@ struct SavedLocationsView: View {
 		}
 		.overlay(alignment: .bottomTrailing) {
 			Button {
-				viewModel.showAddLocation = true
+				viewModel.addTapped()
 			} label: {
 				Image(systemName: "plus")
 					.font(.title2)
@@ -101,5 +106,34 @@ struct SavedLocationsView: View {
 			}
 			.padding(.horizontal, weatherContext.theme == .night ? 52 : 8)
 		}
+	}
+
+
+	private var exploreView: some View {
+		let vm = factory.makeExploreLocationsViewModel()
+
+
+		vm.onAddToSaved = { city in
+			let saved = SavedLocation(
+				name: city.name,
+				lat: city.lat,
+				lon: city.lon,
+				isCurrent: false
+			)
+			onSelectLocation(saved)
+			DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+				dismiss()
+			}
+		}
+
+			
+		vm.onViewWeather = { city, location in
+			onViewWeather(city, location)
+			DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+				dismiss()
+			}
+		}
+
+        return ExploreLocationsView(viewModel: vm)
 	}
 }

@@ -6,11 +6,11 @@
 //
 import Foundation
 import Combine
-import _LocationEssentials
+import CoreLocation
+
 
 @MainActor
 final class HomeViewModel: ObservableObject {
-
 
 	let weatherRepository: WeatherRepositoryProtocol
 	let locationService: LocationServiceProtocol
@@ -18,25 +18,19 @@ final class HomeViewModel: ObservableObject {
 	private let weatherContext: WeatherContext
 	private let networkMonitor = NetworkMonitor.shared
 
-	
 	@Published private(set) var weather: WeatherResponse?
 	@Published var state: ViewState = .loading
 	@Published private(set) var isConnected = true
-
 	@Published var selectedDay: ForecastDay?
 	@Published var showSavedLocations = false
-
 	@Published var allLocations: [SavedLocation] = []
 	@Published var currentLocationIndex: Int = 0
-
+	@Published private(set) var isTemporaryLocation = false
 
 	private var currentGPSLocation: CLLocationCoordinate2D?
 	private var isViewingSelectedLocation = false
-
-
 	private var cancellables = Set<AnyCancellable>()
 	private var fetchTask: Task<Void, Never>?
-
 
 	init(
 		weatherRepository: WeatherRepositoryProtocol,
@@ -55,7 +49,6 @@ final class HomeViewModel: ObservableObject {
 		bindAuthorization()
 	}
 
-
 	private func bindLocation() {
 		locationService.locationPublisher
 			.receive(on: DispatchQueue.main)
@@ -72,7 +65,6 @@ final class HomeViewModel: ObservableObject {
 			.store(in: &cancellables)
 	}
 
-
 	private func bindAuthorization() {
 		locationService.authorizationStatusPublisher
 			.receive(on: DispatchQueue.main)
@@ -84,7 +76,6 @@ final class HomeViewModel: ObservableObject {
 			}
 			.store(in: &cancellables)
 	}
-
 
 	private func bindNetwork() {
 		networkMonitor.$isConnected
@@ -99,7 +90,6 @@ final class HomeViewModel: ObservableObject {
 					if self.weather != nil {
 						self.state = .loaded
 					}
-
 					if self.weather == nil,
 					   let location = self.currentGPSLocation {
 						self.fetchWeather(
@@ -107,7 +97,6 @@ final class HomeViewModel: ObservableObject {
 							lon: location.longitude
 						)
 					}
-
 				} else {
 					self.state = .noInternet
 				}
@@ -115,10 +104,8 @@ final class HomeViewModel: ObservableObject {
 			.store(in: &cancellables)
 	}
 
-
 	func onAppear() {
 		guard handleLocationAuthorization() else { return }
-
 		guard !isViewingSelectedLocation else { return }
 
 		if let location = currentGPSLocation {
@@ -133,45 +120,64 @@ final class HomeViewModel: ObservableObject {
 		locationService.requestLocation()
 	}
 
-
 	func selectLocation(_ location: SavedLocation) {
-
 		showSavedLocations = false
-
-		if let index = allLocations.firstIndex(where: { $0.id == location.id }) {
-			currentLocationIndex = index
-		}
+		isTemporaryLocation = false
 		state = .loading
 		if location.isCurrent {
-
 			isViewingSelectedLocation = false
 			currentGPSLocation = nil
+			currentLocationIndex = 0
 
 			if locationService.authorizationDenied {
 				state = .locationDenied
 				return
 			}
 
+			loadLocations()
+
+
+
 			state = .loading
 			locationService.requestLocation()
 			return
 		}
 
+		isViewingSelectedLocation = true
+		loadLocations()
 
+		if let index = allLocations.firstIndex(where: {
+			$0.lat == location.lat && $0.lon == location.lon
+		}) {
+			currentLocationIndex = index
+		}
+
+		fetchWeather(lat: location.lat, lon: location.lon, saveAsCurrent: false)
+	}
+
+	func viewWeather(lat: Double, lon: Double, name: String) {
+		showSavedLocations = false
 		isViewingSelectedLocation = true
 
-		fetchWeather(
-			lat: location.lat,
-			lon: location.lon,
-			saveAsCurrent: false
-		)
+		loadLocations()
+
+		if let index = allLocations.firstIndex(where: {
+			$0.lat == lat && $0.lon == lon
+		}) {
+
+			currentLocationIndex = index
+			isTemporaryLocation = false
+		} else {
+			isTemporaryLocation = true
+		}
+
+		fetchWeather(lat: lat, lon: lon, saveAsCurrent: false)
 	}
 
 	func navigateToLocation(at index: Int) {
 		guard allLocations.indices.contains(index) else { return }
 		selectLocation(allLocations[index])
 	}
-
 
 	func refresh() async {
 		guard isConnected else {
@@ -181,13 +187,8 @@ final class HomeViewModel: ObservableObject {
 
 		if isViewingSelectedLocation {
 			guard allLocations.indices.contains(currentLocationIndex) else { return }
-
 			let location = allLocations[currentLocationIndex]
-			fetchWeather(
-				lat: location.lat,
-				lon: location.lon,
-				saveAsCurrent: false
-			)
+			fetchWeather(lat: location.lat, lon: location.lon, saveAsCurrent: false)
 			return
 		}
 
@@ -220,16 +221,10 @@ final class HomeViewModel: ObservableObject {
 		}
 	}
 
-
-	func fetchWeather(
-		lat: Double,
-		lon: Double,
-		saveAsCurrent: Bool = true
-	) {
+	func fetchWeather(lat: Double, lon: Double, saveAsCurrent: Bool = true) {
 		fetchTask?.cancel()
 		state = .loading
-		print(lat,lon)
-		print(locationName)
+
 		fetchTask = Task {
 			do {
 				let weather = try await weatherRepository.getWeather(
@@ -237,7 +232,7 @@ final class HomeViewModel: ObservableObject {
 					lon: lon,
 					days: 3
 				)
-
+                print(lat , lon)
 				guard !Task.isCancelled else { return }
 
 				guard !weather.forecast.forecastday.isEmpty else {
@@ -271,7 +266,6 @@ final class HomeViewModel: ObservableObject {
 		locationService.requestLocation()
 	}
 
-
 	private func handleLocationAuthorization() -> Bool {
 		if locationService.authorizationDenied {
 			state = .locationDenied
@@ -290,14 +284,12 @@ final class HomeViewModel: ObservableObject {
 			lat: weather.location.lat,
 			lon: weather.location.lon
 		)
-
 		loadLocations()
 	}
 
 	func selectDay(_ row: ForecastRow) {
 		selectedDay = row.day
 	}
-
 
 	var locationName: String {
 		weather?.location.name ?? ""

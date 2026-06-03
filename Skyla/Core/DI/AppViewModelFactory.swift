@@ -6,16 +6,15 @@
 //
 
 import Swinject
-
-
-final class AppViewModelFactory: ViewModelFactoryProtocol {
+@MainActor
+final class AppViewModelFactory: @preconcurrency ViewModelFactoryProtocol {
 
     private let container: Container
 
     init(container: Container) {
         self.container = container
     }
-
+    
 	func makeHomeViewModel() -> HomeViewModel {
         container.resolve(HomeViewModel.self)!
     }
@@ -27,4 +26,8 @@ final class AppViewModelFactory: ViewModelFactoryProtocol {
     func makeSavedLocationsViewModel() -> SavedLocationsViewModel {
         container.resolve(SavedLocationsViewModel.self)!
     }
+
+	func makeExploreLocationsViewModel() -> ExploreLocationsViewModel {
+		container.resolve(ExploreLocationsViewModel.self)!
+	}
 }

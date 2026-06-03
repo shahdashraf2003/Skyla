@@ -9,7 +9,7 @@
 import Swinject
 import Foundation
 import SwiftData
-
+@MainActor
 final class AppContainer {
 
     static let shared = AppContainer()
@@ -103,6 +103,17 @@ final class AppContainer {
 		container.register(SavedLocationsViewModel.self) { resolver in
 			let repo = resolver.resolve(SavedLocationRepositoryProtocol.self)!
 			return SavedLocationsViewModel(repo: repo)
+		}
+
+		container.register(ExploreLocationsViewModel.self) { resolver in
+			let repo = resolver.resolve(WeatherRepositoryProtocol.self)!
+			let savedLocationRepo = resolver.resolve(SavedLocationRepositoryProtocol.self)!
+			let weatherContext = resolver.resolve(WeatherContext.self)!
+			return ExploreLocationsViewModel(
+				repository:repo,
+				savedLocationRepository: savedLocationRepo,
+				weatherContext: weatherContext
+			)
 		}
 
     }

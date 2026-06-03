@@ -31,24 +31,40 @@ struct HomeView: View {
 					.scaledToFill()
 					.ignoresSafeArea()
 
-				TabView(selection: $viewModel.currentLocationIndex) {
-
-					if viewModel.allLocations.isEmpty {
-						locationPage.tag(0)
-					} else {
-						ForEach(Array(viewModel.allLocations.enumerated()), id: \.offset) { index, _ in
-							locationPage.tag(index)
+				if viewModel.isTemporaryLocation {
+					locationPage
+						.overlay(alignment: .top) {
+							HStack(spacing: 6) {
+								Image(systemName: "bookmark.slash")
+									.font(.caption)
+								Text("Not saved")
+									.font(.caption)
+							}
+							.foregroundColor(foregroundColor.opacity(0.7))
+							.padding(.horizontal, 12)
+							.padding(.vertical, 4)
+							.background(Capsule().fill(foregroundColor.opacity(0.15)))
+							.padding(.top, 8)
+						}
+				} else {
+					TabView(selection: $viewModel.currentLocationIndex) {
+						if viewModel.allLocations.isEmpty {
+							locationPage.tag(0)
+						} else {
+							ForEach(Array(viewModel.allLocations.enumerated()), id: \.offset) { index, _ in
+								locationPage.tag(index)
+							}
 						}
 					}
-				}
-				.tabViewStyle(.page(indexDisplayMode: .never))
-				.onChange(of: viewModel.currentLocationIndex) { _, index in
-					viewModel.navigateToLocation(at: index)
-				}
+					.tabViewStyle(.page(indexDisplayMode: .never))
+					.onChange(of: viewModel.currentLocationIndex) { _, index in
+						viewModel.navigateToLocation(at: index)
+					}
 
-				if viewModel.allLocations.count > 1 {
-					pageIndicator
-						.padding(.bottom, 16)
+					if viewModel.allLocations.count > 1 {
+						pageIndicator
+							.padding(.bottom, 16)
+					}
 				}
 			}
 			.onAppear {
@@ -71,10 +87,16 @@ struct HomeView: View {
 					viewModel: factory.makeSavedLocationsViewModel(),
 					onSelectLocation: { location in
 						viewModel.selectLocation(location)
+					},
+					onViewWeather: { city, location in
+						viewModel.viewWeather(
+							lat: city.lat,
+							lon: city.lon,
+							name: city.name
+						)
 					}
 				)
 			}
-
 			.toolbar {
 				ToolbarItem(placement: .topBarTrailing) {
 					Button {
@@ -89,12 +111,9 @@ struct HomeView: View {
 		}
 	}
 
-
 	private var locationPage: some View {
 		ZStack {
-
 			switch viewModel.state {
-
 				case .loading:
 					ProgressView()
 						.foregroundColor(foregroundColor)
@@ -130,10 +149,6 @@ struct HomeView: View {
 		.foregroundColor(foregroundColor)
 	}
 
-
-	
-
-
 	private var content: some View {
 		ScrollView {
 			VStack(spacing: 24) {
@@ -166,7 +181,6 @@ struct HomeView: View {
 			await viewModel.refresh()
 		}
 	}
-
 
 	private var pageIndicator: some View {
 		HStack(spacing: 6) {
