@@ -1,5 +1,5 @@
 //
-//  SuggestedCityCardImproved.swift
+//  SuggestedCityCard.swift
 //  Skyla
 //
 //  Created by ITI_JETS on 02/06/2026.
@@ -9,7 +9,7 @@
 import SwiftUI
 
 
-struct SuggestedCityCardImproved: View {
+struct SuggestedCityCard: View {
 
     let title: String
     let foregroundColor: Color
@@ -19,7 +19,7 @@ struct SuggestedCityCardImproved: View {
 
         Button(action: action) {
 
-            HStack(spacing: 8) {
+            HStack(spacing: 4) {
 
                 Image(systemName: "sparkles")
                     .font(.caption)
@@ -28,8 +28,8 @@ struct SuggestedCityCardImproved: View {
                     .font(.subheadline.weight(.medium))
             }
             .foregroundColor(foregroundColor)
-            .padding(.horizontal, 14)
-            .padding(.vertical, 10)
+            .padding(.horizontal, 6)
+            .padding(.vertical,4)
             .background(.ultraThinMaterial)
             .clipShape(Capsule())
         }

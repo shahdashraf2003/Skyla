@@ -9,7 +9,7 @@
 import SwiftUI
 
 
-struct CityResultCardImproved: View {
+struct CityResultCard: View {
 
     let item: City
     let foregroundColor: Color

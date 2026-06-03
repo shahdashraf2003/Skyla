@@ -21,10 +21,11 @@ struct SearchBar: View {
             Image(systemName: "magnifyingglass")
                 .foregroundColor(foregroundColor.opacity(0.6))
 
-            TextField("Search city...", text: $query)
+            TextField("", text: $query, prompt: Text("Search city...")
+                .foregroundColor(foregroundColor.opacity(0.4)))
                 .foregroundColor(foregroundColor)
                 .focused($isFocused)
-
+            
             if !query.isEmpty {
                 Button {
                     query = ""

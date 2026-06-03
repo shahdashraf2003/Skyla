@@ -21,6 +21,12 @@ struct ExploreLocationsView: View {
         foregroundColor == .black ? 16 : 54
     }
 
+    private let columns = [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())]
+
+    var isSearching: Bool {
+        !viewModel.query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
     var body: some View {
         ZStack {
             Image(weatherContext.theme.backgroundImage)
@@ -29,67 +35,87 @@ struct ExploreLocationsView: View {
                 .ignoresSafeArea()
 
             VStack(spacing: 12) {
-                SearchBar(query: $viewModel.query,foregroundColor: foregroundColor,horizontalPadding: horizontalPadding)
-            
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 12) {
+                SearchBar(
+                    query: $viewModel.query,
+                    foregroundColor: foregroundColor,
+                    horizontalPadding: horizontalPadding
+                )
 
-                        ForEach(viewModel.suggested, id: \.self) { item in
-                            SuggestedCityCardImproved(
-                                title: item,
-                                foregroundColor: foregroundColor
-                            ) {
-                                viewModel.selectSuggestedByName(item)
+                if !isSearching {
+                    ScrollView {
+                        LazyVGrid(columns: columns, spacing: 10) {
+                            ForEach(viewModel.suggested, id: \.self) { item in
+                                SuggestedCityCard(
+                                    title: item,
+                                    foregroundColor: foregroundColor
+                                ) {
+                                    viewModel.selectSuggestedByName(item)
+                                }
                             }
                         }
+                        .padding(.horizontal, horizontalPadding)
+                        
                     }
-                    .padding(.horizontal)
-                }
-                ScrollView {
-                    VStack(spacing: 12) {
+                    .scrollContentBackground(.hidden)
+                } else {
+                    ScrollView {
+                        VStack(spacing: 12) {
+                            if viewModel.isSearching {
+                                ProgressView()
+                                    .foregroundColor(foregroundColor)
+                                    .padding(.top, 60)
 
-                        ForEach(viewModel.results) { item in
-                            CityResultCardImproved(
-                                item: item,
-                                foregroundColor: foregroundColor
-                            ) {
-                                viewModel.selectCity(item)
+                            } else if viewModel.showNoInternet {
+                               
+                                NoInternetView(
+                                    retry: { await viewModel.retrySearch() },
+                                    foregroundColor: foregroundColor
+                                )
+                                .padding(.top, 60)
+
+                            } else if viewModel.showNoResults {
+                                NoResultsView(
+                                    query: viewModel.query,
+                                    foregroundColor: foregroundColor
+                                )
+
+                            } else {
+                                ForEach(viewModel.results) { item in
+                                    CityResultCard(
+                                        item: item,
+                                        foregroundColor: foregroundColor
+                                    ) {
+                                        viewModel.selectCity(item)
+                                    }
+                                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                                }
                             }
-                            .transition(.move(edge: .bottom).combined(with: .opacity))
-                           
                         }
+                        .padding(horizontalPadding)
                     }
-                    .padding(.horizontal)
+                    .scrollContentBackground(.hidden)
                 }
-                .scrollContentBackground(.hidden)
+
                 if viewModel.isLoadingCity {
                     ProgressView("Loading...")
                         .foregroundColor(foregroundColor)
                 }
-
-             
-               
             }
         }
-        .navigationTitle("Explore Locations")
-        .foregroundColor(foregroundColor)
-        .navigationBarTitleDisplayMode(.inline)
-       
-
+        .navigationTitle("")
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                Text("Explore Locations")
+                    .foregroundColor(foregroundColor)
+                    .font(.headline)
+            }
+        }
         .onChange(of: viewModel.shouldDismiss) { _, value in
             if value { dismiss() }
         }
-
         .alert("Location", isPresented: $viewModel.showAddAlert) {
-
-            Button("Add to Saved") {
-                viewModel.confirmAddToSaved()
-            }
-
-            Button("View Weather") {
-                viewModel.confirmViewWeather()
-            }
-
+            Button("Add to Saved") { viewModel.confirmAddToSaved() }
+            Button("View Weather") { viewModel.confirmViewWeather() }
             Button("Cancel", role: .cancel) {}
         } message: {
             if let city = viewModel.selectedCity {
@@ -98,3 +124,5 @@ struct ExploreLocationsView: View {
         }
     }
 }
+
+
