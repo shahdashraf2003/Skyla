@@ -28,7 +28,7 @@ final class HomeViewModel: ObservableObject {
 	@Published private(set) var isTemporaryLocation = false
 
 	private var currentGPSLocation: CLLocationCoordinate2D?
-	private var isViewingSelectedLocation = false
+	var isViewingSelectedLocation = false
 	private var cancellables = Set<AnyCancellable>()
 	private var fetchTask: Task<Void, Never>?
 
@@ -69,7 +69,7 @@ final class HomeViewModel: ObservableObject {
 			.receive(on: DispatchQueue.main)
 			.sink { [weak self] denied in
 				guard let self else { return }
-				if denied {
+				if denied && !self.isViewingSelectedLocation {
 					self.state = .locationDenied
 				}
 			}
@@ -137,8 +137,6 @@ final class HomeViewModel: ObservableObject {
 			}
 
 			loadLocations()
-
-
 
 			state = .loading
 			locationService.requestLocation()
@@ -265,10 +263,16 @@ final class HomeViewModel: ObservableObject {
 	}
 
 	private func handleLocationAuthorization() -> Bool {
+
+		if isViewingSelectedLocation {
+			return true
+		}
+
 		if locationService.authorizationDenied {
 			state = .locationDenied
 			return false
 		}
+
 		return true
 	}
 
@@ -329,4 +333,5 @@ final class HomeViewModel: ObservableObject {
 		guard let current = weather?.current else { return [] }
 		return WeatherInfoMapper.map(from: current)
 	}
+	
 }

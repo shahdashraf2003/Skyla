@@ -205,12 +205,14 @@ struct HomeView: View {
         viewModel.onAppear()
     }
 
-    private func onScenePhaseChange(_ phase: ScenePhase) {
-        guard phase == .active else { return }
-        viewModel.checkLocationPermission()
-        viewModel.forceLocationRefresh()
-    }
+	private func onScenePhaseChange(_ phase: ScenePhase) {
+		guard phase == .active else { return }
 
+		if !viewModel.isViewingSelectedLocation {
+			viewModel.checkLocationPermission()
+			viewModel.forceLocationRefresh()
+		}
+	}
     private func openSettings() {
         guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
         UIApplication.shared.open(url)

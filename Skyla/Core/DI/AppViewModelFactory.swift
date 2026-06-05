@@ -7,7 +7,7 @@
 
 import Swinject
 @MainActor
-final class AppViewModelFactory: @preconcurrency ViewModelFactoryProtocol {
+final class AppViewModelFactory: ViewModelFactoryProtocol {
 
     private let container: Container
 
