@@ -5,57 +5,75 @@
 //  Created by Shahd Ashraf on 28/05/2026.
 //
 
+//
+//  APIClient.swift
+//  Skyla
+//
+//  Created by Shahd Ashraf on 28/05/2026.
+//
 
 import Foundation
 
 protocol APIClientProtocol {
-	func request<T: Codable>(_ endpoint: Endpoint) async throws -> T
+    func request<T: Codable>(_ endpoint: Endpoint) async throws -> T
 }
 
 final class APIClient: APIClientProtocol {
 
-	private let session: URLSession
+    private let session: URLSession
 
-	init(session: URLSession) {
-		self.session = session
-	}
+    init(session: URLSession? = nil) {
 
-	func request<T: Codable>(
-		_ endpoint: Endpoint
-	) async throws -> T {
+        if let session {
+            self.session = session
+        } else {
+            let config = URLSessionConfiguration.default
+            config.waitsForConnectivity = false
+            config.timeoutIntervalForRequest = 5
+            config.timeoutIntervalForResource = 10
 
-		guard let url = endpoint.url else {
-			throw NetworkError.invalidURL
-		}
+            self.session = URLSession(configuration: config)
+        }
+    }
 
-		let urlRequest = URLRequest(url: url)
+    func request<T: Codable>(
+        _ endpoint: Endpoint
+    ) async throws -> T {
 
-		do {
-			let (data, response) = try await session.data(for: urlRequest)
+        guard let url = endpoint.url else {
+            throw NetworkError.invalidURL
+        }
 
-			guard let httpResponse = response as? HTTPURLResponse,
-				  200..<300 ~= httpResponse.statusCode else {
-				throw NetworkError.requestFailed
-			}
+        let urlRequest = URLRequest(url: url)
 
-			let decoded = try JSONDecoder().decode(T.self, from: data)
+        do {
+            let (data, response) = try await session.data(for: urlRequest)
 
-			return decoded
+            guard let httpResponse = response as? HTTPURLResponse,
+                  200..<300 ~= httpResponse.statusCode else {
+                throw NetworkError.requestFailed
+            }
 
-		} catch {
-			if let urlError = error as? URLError {
-				switch urlError.code {
-					case .notConnectedToInternet,
-							.networkConnectionLost,
-							.cannotFindHost,
-							.dnsLookupFailed:
-						throw NetworkError.noInternet
-					default:
-						throw error
-				}
-			}
+            return try JSONDecoder().decode(T.self, from: data)
 
-			throw error
-		}
-	}
+        } catch {
+            if let urlError = error as? URLError {
+
+                switch urlError.code {
+
+                case .notConnectedToInternet,
+                     .networkConnectionLost,
+                     .cannotFindHost,
+                     .dnsLookupFailed,
+                     .timedOut:
+                    throw NetworkError.noInternet
+
+                default:
+                    throw error
+                }
+            }
+
+            throw error
+        }
+    }
 }

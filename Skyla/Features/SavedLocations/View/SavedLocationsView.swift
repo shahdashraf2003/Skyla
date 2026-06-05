@@ -7,133 +7,134 @@
 
 import SwiftUI
 struct SavedLocationsView: View {
-	@Environment(\.dismiss) private var dismiss
-	@EnvironmentObject var weatherContext: WeatherContext
-	@StateObject var viewModel: SavedLocationsViewModel
-	@State private var locationToDelete: SavedLocation?
-	let factory = AppContainer.shared.makeFactory()
-	let onSelectLocation: (SavedLocation) -> Void
-	let onViewWeather: (City, Location) -> Void
 
-	var foregroundColor: Color {
-		weatherContext.theme == .day ? .black : .white
-	}
-	var backGroundColor: Color {
-		weatherContext.theme == .day ? .white : .black
-	}
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var weatherContext: WeatherContext
 
-	var body: some View {
-		ZStack {
-			Image(weatherContext.theme.backgroundImage)
-				.resizable()
-				.scaledToFill()
-				.ignoresSafeArea()
+    @StateObject var viewModel: SavedLocationsViewModel
+    @State private var locationToDelete: SavedLocation?
+    @State private var didAppear = false
 
-			if viewModel.isEmpty {
-				EmptySavedLocationsView(foregroundColor: foregroundColor)
-			} else {
-				List {
-					ForEach(viewModel.locations) { location in
-						SavedLocationRow(
-							location: location,
-							foregroundColor: foregroundColor
-						)
-						.contentShape(Rectangle())
-						.onTapGesture {
-							onSelectLocation(location)
-						}
-						.listRowBackground(Color.clear)
-						.listRowSeparator(.hidden)
-						.listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 8, trailing: 0))
-						.swipeActions(edge: .trailing, allowsFullSwipe: false) {
-							if !location.isCurrent {
-								Button(role: .destructive) {
-									locationToDelete = location
-								} label: {
-									Label("Delete", systemImage: "trash")
-								}
-							}
-						}
+    let factory = AppContainer.shared.makeFactory()
 
-						if location.isCurrent && viewModel.locations.count > 1 {
-							Rectangle()
-								.fill(foregroundColor.opacity(0.5))
-								.frame(height: 0.5)
-								.listRowBackground(Color.clear)
-								.listRowSeparator(.hidden)
-						}
-					}
-				}
-				.environment(\.defaultMinListRowHeight, 0)
-				.scrollContentBackground(.hidden)
-				.padding(.horizontal, weatherContext.theme == .night ? 40 : 0)
-			}
-		}
-		.navigationDestination(isPresented: $viewModel.navigateToExplore) {
-			exploreView  // ← هنا بنستخدم exploreView مش factory مباشرة
-		}
-		.confirmationDialog(
-			"Remove \(locationToDelete?.name ?? "")?",
-			isPresented: Binding(
-				get: { locationToDelete != nil },
-				set: { if !$0 { locationToDelete = nil } }
-			),
-			titleVisibility: .visible
-		) {
-			Button("Remove", role: .destructive) {
-				if let location = locationToDelete {
-					viewModel.delete(location)
-					locationToDelete = nil
-				}
-			}
-			Button("Cancel", role: .cancel) {
-				locationToDelete = nil
-			}
-		} message: {
-			Text("This location will be removed from your saved list.")
-		}
-		.overlay(alignment: .bottomTrailing) {
-			Button {
-				viewModel.addTapped()
-			} label: {
-				Image(systemName: "plus")
-					.font(.title2)
-					.foregroundColor(backGroundColor)
-					.frame(width: 56, height: 56)
-					.background(foregroundColor.opacity(0.9))
-					.clipShape(Circle())
-					.shadow(radius: 8)
-			}
-			.padding(.horizontal, weatherContext.theme == .night ? 52 : 8)
-		}
-	}
+    let onSelectLocation: (SavedLocation) -> Void
+    let onViewWeather: (City, Location) -> Void
 
+    var foregroundColor: Color {
+        weatherContext.theme == .day ? .black : .white
+    }
 
-	private var exploreView: some View {
-		let vm = factory.makeExploreLocationsViewModel()
+    var backgroundColor: Color {
+        weatherContext.theme == .day ? .white : .black
+    }
 
+    var body: some View {
+        ZStack {
 
-		vm.onAddToSaved = { city in
-			let saved = SavedLocation(
-				name: city.name,
-				lat: city.lat,
-				lon: city.lon,
-				isCurrent: false
-			)
-			onSelectLocation(saved)
-			DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-				dismiss()
-			}
-		}
+            Image(weatherContext.theme.backgroundImage)
+                .resizable()
+                .scaledToFill()
+                .ignoresSafeArea()
 
-			
-		vm.onViewWeather = { city, location in
-			onViewWeather(city, location)
-			DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-				dismiss()
-			}
-		}
+            if viewModel.isEmpty {
+                EmptySavedLocationsView(foregroundColor: foregroundColor)
+            } else {
+                SavedLocationsListView(
+                    locations: viewModel.locations,
+                    foregroundColor: foregroundColor,
+                    onSelect: { location in
+                        onSelectLocation(location)
+                    },
+                    onDeleteRequest: { location in
+                        locationToDelete = location
+                    }
+                )
+                .padding(.horizontal, weatherContext.theme == .night ? 40 : 0)
+                
+            }
+        }
+        .offset(x: didAppear ? 0 : 30)
+        .opacity(didAppear ? 1 : 0)
+        .animation(.easeOut(duration: 0.35), value: didAppear)
+        .onAppear {
+            didAppear = true
+        }
+        .toolbar {
+            
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button {
+                    dismiss()
+                } label: {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(foregroundColor)
+                }
+            }
+
+            ToolbarItem(placement: .principal) {
+                Text("Saved Locations")
+                    .font(.headline)
+                    .foregroundColor(foregroundColor)
+            }
+        }
+        .navigationBarBackButtonHidden(true)
+        .navigationDestination(isPresented: $viewModel.navigateToExplore) {
+            exploreView
+        }
+        .confirmationDialog(
+            "Remove \(locationToDelete?.name ?? "")?",
+            isPresented: Binding(
+                get: { locationToDelete != nil },
+                set: { if !$0 { locationToDelete = nil } }
+            ),
+            titleVisibility: .visible
+        ) {
+            Button("Remove", role: .destructive) {
+                if let location = locationToDelete {
+                    viewModel.delete(location)
+                    locationToDelete = nil
+                }
+            }
+
+            Button("Cancel", role: .cancel) {
+                locationToDelete = nil
+            }
+        } message: {
+            Text("This location will be removed from your saved list.")
+        }
+        .overlay(alignment: .bottomTrailing) {
+            AddButton(addTapped: viewModel.addTapped, backgroundColor: backgroundColor, foregroundColor: foregroundColor, weatherContext: weatherContext)
+                .scaleEffect(didAppear ? 1 : 0.8)
+                .opacity(didAppear ? 1 : 0)
+                .animation(.spring(response: 0.5, dampingFraction: 0.7), value: didAppear)
+        }
+    }
+
+    
+
+    
+  
+
+    private var exploreView: some View {
+        let vm = factory.makeExploreLocationsViewModel()
+
+        vm.onAddToSaved = { [viewModel] city in
+            let saved = viewModel.buildSavedLocation(from: city)
+            onSelectLocation(saved)
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                dismiss()
+            }
+        }
+
+        vm.onViewWeather = { city, location in
+            onViewWeather(city, location)
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                dismiss()
+            }
+        }
 
         return ExploreLocationsView(viewModel: vm)
-	}
+    }
 }

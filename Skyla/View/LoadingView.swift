@@ -6,36 +6,67 @@
 //
 
 import SwiftUI
+import Combine
 
 struct LoadingView: View {
-    let backgroundImage: String
+    //let backgroundImage: String
     let foregroundColor: Color
 
     @State private var isReady = false
+    @State private var iconScale: CGFloat = 0.6
+    @State private var iconOpacity: CGFloat = 0
+    @State private var textOpacity: CGFloat = 0
+    @State private var dotCount = 0
+
+    private let timer = Timer.publish(every: 0.5, on: .main, in: .common).autoconnect()
 
     var body: some View {
         ZStack {
-            Image(backgroundImage)
+          /*  Image(backgroundImage)
                 .resizable()
                 .scaledToFill()
                 .ignoresSafeArea()
                 .blur(radius: isReady ? 0 : 18)
-                .scaleEffect(isReady ? 1 : 1.05) // prevents blur edge bleed
-                .animation(.easeInOut(duration: 1.2), value: isReady)
+                .scaleEffect(isReady ? 1 : 1.05)
+                .animation(.easeInOut(duration: 1.2), value: isReady)*/
 
             VStack(spacing: 12) {
                 Image(systemName: "cloud.sun.fill")
                     .font(.system(size: 52))
                     .symbolEffect(.pulse)
                     .foregroundColor(foregroundColor)
+                    .scaleEffect(iconScale)
+                    .opacity(iconOpacity)
 
-                Text("Loading...")
+                Text("Loading\(dots)")
                     .font(.callout)
                     .foregroundColor(foregroundColor.opacity(0.7))
+                    .opacity(textOpacity)
+                    .animation(.easeInOut(duration: 0.2), value: dotCount)
             }
         }
         .onAppear {
             isReady = true
+
+            withAnimation(.spring(response: 0.6, dampingFraction: 0.6).delay(0.2)) {
+                iconScale = 1.0
+                iconOpacity = 1
+            }
+
+            withAnimation(.easeIn(duration: 0.4).delay(0.5)) {
+                textOpacity = 1
+            }
+        }
+        .onReceive(timer) { _ in
+            dotCount = (dotCount + 1) % 4
         }
     }
+
+    private var dots: String {
+        String(repeating: ".", count: dotCount)
+    }
+}
+
+#Preview {
+    LoadingView( foregroundColor: .black)
 }

@@ -8,206 +8,204 @@ import SwiftUI
 
 struct HomeView: View {
 
-	let factory = AppContainer.shared.makeFactory()
-	@StateObject var viewModel: HomeViewModel
-	@EnvironmentObject var context: WeatherContext
+    let factory = AppContainer.shared.makeFactory()
+    @StateObject var viewModel: HomeViewModel
+    @EnvironmentObject var context: WeatherContext
+    @Environment(\.scenePhase) private var scenePhase
 
-	var foregroundColor: Color {
-		context.theme == .day ? .black : .white
-	}
+    var foregroundColor: Color {
+        context.theme == .day ? .black : .white
+    }
 
-	var backgroundColor: Color {
-		context.theme == .day ? .white : .black
-	}
+    var backgroundColor: Color {
+        context.theme == .day ? .white : .black
+    }
 
-	@Environment(\.scenePhase) private var scenePhase
 
-	var body: some View {
-		NavigationStack {
-			ZStack(alignment: .top) {
+    var body: some View {
+        NavigationStack {
+            ZStack(alignment: .top) {
+                backgroundImage
+                mainContent
+            }
+            .onAppear(perform: onAppear)
+            .onChange(of: scenePhase, perform: onScenePhaseChange)
+            .navigationDestination(item: $viewModel.selectedDay) { day in
+                DayDetailsView(viewModel: factory.makeDayDetailsViewModel(day: day))
+            }
+            .navigationDestination(isPresented: $viewModel.showSavedLocations) {
+                savedLocationsDestination
+            }
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    savedLocationsButton
+                }
+            }
+        }
+    }
 
-				Image(context.theme.backgroundImage)
-					.resizable()
-					.scaledToFill()
-					.ignoresSafeArea()
+    @ViewBuilder
+    private var mainContent: some View {
+        if viewModel.isTemporaryLocation {
+            locationPage.overlay(alignment: .top) {
+                notSavedBadge
+            }
+        } else {
+            pagedLocations
+        }
+    }
 
-				if viewModel.isTemporaryLocation {
-					locationPage
-						.overlay(alignment: .top) {
-							HStack(spacing: 6) {
-								Image(systemName: "bookmark.slash")
-									.font(.caption)
-								Text("Not saved")
-									.font(.caption)
-							}
-							.foregroundColor(foregroundColor.opacity(0.7))
-							.padding(.horizontal, 12)
-							.padding(.vertical, 4)
-							.background(Capsule().fill(foregroundColor.opacity(0.15)))
-							.padding(.top, 8)
-						}
-				} else {
-					TabView(selection: $viewModel.currentLocationIndex) {
-						if viewModel.allLocations.isEmpty {
-							locationPage.tag(0)
-						} else {
-							ForEach(Array(viewModel.allLocations.enumerated()), id: \.offset) { index, _ in
-								locationPage.tag(index)
-							}
-						}
-					}
-					.tabViewStyle(.page(indexDisplayMode: .never))
-					.onChange(of: viewModel.currentLocationIndex) { _, index in
-						viewModel.navigateToLocation(at: index)
-					}
+    private var pagedLocations: some View {
+        ZStack(alignment: .top) {
+            TabView(selection: $viewModel.currentLocationIndex) {
+                if viewModel.allLocations.isEmpty {
+                    locationPage.tag(0)
+                } else {
+                    ForEach(Array(viewModel.allLocations.enumerated()), id: \.offset) { index, _ in
+                        locationPage.tag(index)
+                    }
+                }
+            }
+            .tabViewStyle(.page(indexDisplayMode: .never))
+            .animation(.spring(response: 0.4, dampingFraction: 0.85), value: viewModel.state)
+            .onChange(of: viewModel.currentLocationIndex) { _, index in
+                viewModel.navigateToLocation(at: index)
+            }
 
-					if viewModel.allLocations.count > 1 {
-						pageIndicator
-							.padding(.bottom, 16)
-					}
-				}
-			}
-			.onAppear {
-				viewModel.loadLocations()
-				viewModel.onAppear()
-			}
-			.onChange(of: scenePhase) { _, phase in
-				if phase == .active {
-					viewModel.checkLocationPermission()
-					viewModel.forceLocationRefresh()
-				}
-			}
-			.navigationDestination(item: $viewModel.selectedDay) { day in
-				DayDetailsView(
-					viewModel: factory.makeDayDetailsViewModel(day: day)
-				)
-			}
-			.navigationDestination(isPresented: $viewModel.showSavedLocations) {
-				SavedLocationsView(
-					viewModel: factory.makeSavedLocationsViewModel(),
-					onSelectLocation: { location in
-						viewModel.selectLocation(location)
-					},
-					onViewWeather: { city, location in
-						viewModel.viewWeather(
-							lat: city.lat,
-							lon: city.lon,
-							name: city.name
-						)
-					}
-				)
-			}
-			.toolbar {
-				ToolbarItem(placement: .topBarTrailing) {
-					Button {
-						viewModel.showSavedLocations = true
-					} label: {
-						Image(.music)
-							.resizable()
-							.frame(width: 32, height: 32)
-					}
-				}
-			}
-		}
-	}
+            if viewModel.allLocations.count > 1 {
+                PageIndicator(
+                    foregroundColor: foregroundColor,
+                    allLocations: viewModel.allLocations,
+                    currentIndex: viewModel.currentLocationIndex
+                )
+            }
+        }
+    }
 
-	private var locationPage: some View {
-		ZStack {
-			switch viewModel.state {
-				case .loading:
-					ProgressView()
-						.foregroundColor(foregroundColor)
+    private var locationPage: some View {
+        ZStack {
+            switch viewModel.state {
 
-				case .loaded:
-					content
+            case .loading:
+                LoadingView(foregroundColor: foregroundColor)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .transition(.opacity)
 
-				case .empty:
-					EmptyStateView()
+            case .loaded:
+                content
+                    .transition(.opacity.combined(with: .move(edge: .bottom)))
 
-				case .locationDenied:
-					PermissionDeniedView(
-						openSettingsAction: {
-							guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
-							UIApplication.shared.open(url)
-						}
-					)
+            case .empty:
+                EmptyStateView()
+                    .transition(.opacity)
 
-				case .noInternet:
-					NoInternetView(
-						retry: {
-							await viewModel.refresh()
-						}, foregroundColor: foregroundColor
-					)
+            case .locationDenied:
+                PermissionDeniedView(openSettingsAction: openSettings)
+                    .transition(.opacity)
 
-				case .error(let message):
-					ErrorView(
-						message: message,
-						retryAction: { viewModel.onAppear() }
-					)
-			}
-		}
-		.foregroundColor(foregroundColor)
-	}
+            case .noInternet:
+                NoInternetView(
+                    retry: { await viewModel.refresh() },
+                    foregroundColor: foregroundColor
+                )
+                .transition(.opacity)
 
-	private var content: some View {
-		ScrollView {
-			VStack(spacing: 24) {
+            case .error(let message):
+                ErrorView(
+                    message: message,
+                    retryAction: viewModel.onAppear,
+                    backgroundColor: backgroundColor
+                )
+                .transition(.opacity)
+            }
+        }
+        .animation(.easeInOut(duration: 0.35), value: viewModel.state)
+        .foregroundColor(foregroundColor)
+    }
 
-				TopSectionView(
-					locationName: viewModel.locationName,
-					iconURL: viewModel.currentConditionIconURL,
-					temperature: viewModel.currentTemperature,
-					conditionText: viewModel.conditionText,
-					highLowText: viewModel.todayHighLow
-				)
+    private var content: some View {
+        ScrollView {
+            VStack(spacing: 24) {
+                TopSectionView(
+                    locationName: viewModel.locationName,
+                    iconURL: viewModel.currentConditionIconURL,
+                    temperature: viewModel.currentTemperature,
+                    conditionText: viewModel.conditionText,
+                    highLowText: viewModel.todayHighLow
+                )
 
-				ForecastSection(
-					foregroundColor: foregroundColor,
-					threeDayForecast: viewModel.threeDayForecast,
-					onSelectDay: { day in
-						viewModel.selectedDay = day.day
-					}
-				)
+                ForecastSection(
+                    foregroundColor: foregroundColor,
+                    threeDayForecast: viewModel.threeDayForecast,
+                    onSelectDay: { day in viewModel.selectedDay = day.day }
+                )
 
-				infoGrid(
-					infoItems: viewModel.infoItems,
-					foregroundColor: foregroundColor
-				)
-			}
-			.animation(.easeInOut, value: viewModel.isConnected)
-			.padding(.bottom, 48)
-		}
-		.refreshable {
-			await viewModel.refresh()
-		}
-	}
+                infoGrid(
+                    infoItems: viewModel.infoItems,
+                    foregroundColor: foregroundColor
+                )
+            }
+            .animation(.easeInOut, value: viewModel.isConnected)
+            .padding(.bottom, 48)
+        }
+        .refreshable {
+            await viewModel.refresh()
+        }
+    }
+    
+    private var backgroundImage: some View {
+        Image(context.theme.backgroundImage)
+            .resizable()
+            .scaledToFill()
+            .ignoresSafeArea()
+    }
 
-	private var pageIndicator: some View {
-		HStack(spacing: 6) {
-			ForEach(Array(viewModel.allLocations.enumerated()), id: \.offset) { index, location in
-				if location.isCurrent {
-					Image(systemName: "location.fill")
-						.font(.system(size: 8))
-						.foregroundColor(
-							index == viewModel.currentLocationIndex
-							? foregroundColor
-							: foregroundColor.opacity(0.4)
-						)
-				} else {
-					Circle()
-						.fill(
-							index == viewModel.currentLocationIndex
-							? foregroundColor
-							: foregroundColor.opacity(0.4)
-						)
-						.frame(width: 8, height: 8)
-				}
-			}
-		}
-		.padding(.horizontal, 12)
-		.padding(.vertical, 6)
-		.background(
-			Capsule().fill(foregroundColor.opacity(0.15))
-		)
-	}
+    private var notSavedBadge: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "bookmark.slash").font(.caption)
+            Text("Not saved").font(.caption)
+        }
+        .foregroundColor(foregroundColor.opacity(0.7))
+        .padding(.horizontal, 12)
+        .padding(.vertical, 4)
+        .background(Capsule().fill(foregroundColor.opacity(0.15)))
+        .padding(.top, 8)
+    }
+
+    private var savedLocationsButton: some View {
+        Button {
+            viewModel.showSavedLocations = true
+        } label: {
+            Image(.music)
+                .resizable()
+                .frame(width: 32, height: 32)
+        }
+    }
+
+    private var savedLocationsDestination: some View {
+        SavedLocationsView(
+            viewModel: factory.makeSavedLocationsViewModel(),
+            onSelectLocation: viewModel.selectLocation,
+            onViewWeather: { city, _ in
+                viewModel.viewWeather(lat: city.lat, lon: city.lon, name: city.name)
+            }
+        )
+    }
+
+
+    private func onAppear() {
+        viewModel.loadLocations()
+        viewModel.onAppear()
+    }
+
+    private func onScenePhaseChange(_ phase: ScenePhase) {
+        guard phase == .active else { return }
+        viewModel.checkLocationPermission()
+        viewModel.forceLocationRefresh()
+    }
+
+    private func openSettings() {
+        guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
+        UIApplication.shared.open(url)
+    }
 }

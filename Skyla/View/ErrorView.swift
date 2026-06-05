@@ -13,6 +13,8 @@ struct ErrorView: View {
     
     let message: String
 	let retryAction : ()->  Void
+    var backgroundColor :Color
+    
 
     var body: some View {
         VStack(spacing: 16) {
@@ -35,7 +37,7 @@ struct ErrorView: View {
                retryAction()
             }
             .padding()
-            .background(.white.opacity(0.9))
+            .background(backgroundColor.opacity(0.9))
             .cornerRadius(14)
 
 			Text("")
@@ -46,4 +48,13 @@ struct ErrorView: View {
 		.background(.white.opacity(0.5))
 		.cornerRadius(22)
     }
+}
+#Preview {
+    ErrorView(
+        message: "not working", retryAction: {
+            print("hello")
+        }, backgroundColor: .black
+        )
+       
+    
 }

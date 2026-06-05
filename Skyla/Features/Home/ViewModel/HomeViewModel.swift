@@ -42,7 +42,6 @@ final class HomeViewModel: ObservableObject {
 		self.locationService = locationService
 		self.savedLocationRepository = savedLocationRepository
 		self.weatherContext = weatherContext
-
 		loadLocations()
 		bindLocation()
 		bindNetwork()
@@ -82,11 +81,13 @@ final class HomeViewModel: ObservableObject {
 			.receive(on: DispatchQueue.main)
 			.removeDuplicates()
 			.sink { [weak self] connected in
+                print("Network Status:", connected)
 				guard let self else { return }
 
 				self.isConnected = connected
 
 				if connected {
+                    print("Internet Connected")
 					if self.weather != nil {
 						self.state = .loaded
 					}
@@ -98,6 +99,7 @@ final class HomeViewModel: ObservableObject {
 						)
 					}
 				} else {
+                    print("Internet Disconnected")
 					self.state = .noInternet
 				}
 			}
@@ -180,11 +182,7 @@ final class HomeViewModel: ObservableObject {
 	}
 
 	func refresh() async {
-		guard isConnected else {
-			state = .noInternet
-			return
-		}
-
+        
 		if isViewingSelectedLocation {
 			guard allLocations.indices.contains(currentLocationIndex) else { return }
 			let location = allLocations[currentLocationIndex]

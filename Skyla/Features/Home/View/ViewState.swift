@@ -6,7 +6,7 @@
 //
 
 
-enum ViewState {
+enum ViewState :Equatable {
 
     case loading
     case loaded

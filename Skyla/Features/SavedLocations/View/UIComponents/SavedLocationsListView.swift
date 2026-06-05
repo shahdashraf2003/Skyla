@@ -1,3 +1,11 @@
+//
+//  SavedLocationsListView.swift
+//  Skyla
+//
+//  Created by ITI_JETS on 05/06/2026.
+//
+
+
 import SwiftUI
 
 struct SavedLocationsListView: View {
