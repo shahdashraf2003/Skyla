@@ -14,14 +14,20 @@ struct ExploreLocationsView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var weatherContext: WeatherContext
 
+    @State private var didAppear = false
     var foregroundColor: Color {
         weatherContext.theme == .day ? .black : .white
     }
+
     var horizontalPadding: CGFloat {
         foregroundColor == .black ? 16 : 54
     }
 
-    private let columns = [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())]
+    private let columns = [
+        GridItem(.flexible()),
+        GridItem(.flexible()),
+        GridItem(.flexible())
+    ]
 
     var isSearching: Bool {
         !viewModel.query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -35,11 +41,13 @@ struct ExploreLocationsView: View {
                 .ignoresSafeArea()
 
             VStack(spacing: 12) {
+
                 SearchBar(
                     query: $viewModel.query,
                     foregroundColor: foregroundColor,
                     horizontalPadding: horizontalPadding
                 )
+                .transition(.move(edge: .top).combined(with: .opacity))
 
                 if !isSearching {
                     ScrollView {
@@ -49,67 +57,110 @@ struct ExploreLocationsView: View {
                                     title: item,
                                     foregroundColor: foregroundColor
                                 ) {
-                                    viewModel.selectSuggestedByName(item)
+                                    withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                                        viewModel.selectSuggestedByName(item)
+                                    }
                                 }
+                                .transition(.scale.combined(with: .opacity))
                             }
                         }
                         .padding(.horizontal, horizontalPadding)
-                        
+                        .animation(.easeInOut(duration: 0.25), value: viewModel.suggested)
                     }
                     .scrollContentBackground(.hidden)
+
                 } else {
+
                     ScrollView {
                         VStack(spacing: 12) {
                             if viewModel.isSearching {
-                                ProgressView()
-                                    .foregroundColor(foregroundColor)
+                               LoadingView(foregroundColor:foregroundColor)
+                                    .padding()
                                     .padding(.top, 60)
+                                    .transition(.opacity)
+                            }
 
-                            } else if viewModel.showNoInternet {
-                               
+                          
+                            else if viewModel.showNoInternet {
                                 NoInternetView(
                                     retry: { await viewModel.retrySearch() },
                                     foregroundColor: foregroundColor
                                 )
                                 .padding(.top, 60)
+                                .transition(.opacity)
+                            }
 
-                            } else if viewModel.showNoResults {
+                            else if viewModel.showNoResults {
                                 NoResultsView(
                                     query: viewModel.query,
                                     foregroundColor: foregroundColor
                                 )
+                                .transition(.opacity)
+                            }
 
-                            } else {
+                        
+                            else {
                                 ForEach(viewModel.results) { item in
                                     CityResultCard(
                                         item: item,
                                         foregroundColor: foregroundColor
                                     ) {
-                                        viewModel.selectCity(item)
+                                        withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
+                                            viewModel.selectCity(item)
+                                        }
                                     }
                                     .transition(.move(edge: .bottom).combined(with: .opacity))
                                 }
                             }
                         }
                         .padding(horizontalPadding)
+                        .animation(.easeInOut(duration: 0.3), value: viewModel.results)
+                        .animation(.easeInOut(duration: 0.3), value: viewModel.isSearching)
+                        .animation(.easeInOut(duration: 0.3), value: viewModel.showNoResults)
+                        .animation(.easeInOut(duration: 0.3), value: viewModel.showNoInternet)
                     }
                     .scrollContentBackground(.hidden)
                 }
 
+             
                 if viewModel.isLoadingCity {
-                    ProgressView("Loading...")
+                    LoadingView(foregroundColor: foregroundColor)
+                        .transition(.opacity)
+                        .animation(.easeInOut(duration: 0.2), value: viewModel.isLoadingCity)
+                }
+            }
+            .opacity(didAppear ? 1 : 0)
+            .offset(y: didAppear ? 0 : 20)
+            .animation(.easeOut(duration: 0.35), value: didAppear)
+        }
+
+        
+        .toolbar {
+
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button {
+                    dismiss()
+                } label: {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(foregroundColor)
                 }
             }
-        }
-        .navigationTitle("")
-        .toolbar {
+
             ToolbarItem(placement: .principal) {
                 Text("Explore Locations")
-                    .foregroundColor(foregroundColor)
                     .font(.headline)
+                    .foregroundColor(foregroundColor)
             }
         }
+
+        .navigationBarBackButtonHidden(true)
+
+        
+        .onAppear {
+            didAppear = true
+        }
+
         .onChange(of: viewModel.shouldDismiss) { _, value in
             if value { dismiss() }
         }
@@ -124,5 +175,3 @@ struct ExploreLocationsView: View {
         }
     }
 }
-
-

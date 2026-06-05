@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct HourUIModel: Identifiable {
+struct HourUIModel: Identifiable ,Equatable{
 	let id = UUID()
 	let hour: HourWeather
 	let isNow: Bool

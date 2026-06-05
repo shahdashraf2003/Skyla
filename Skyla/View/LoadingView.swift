@@ -9,7 +9,7 @@ import SwiftUI
 import Combine
 
 struct LoadingView: View {
-    //let backgroundImage: String
+   
     let foregroundColor: Color
 
     @State private var isReady = false
@@ -22,13 +22,6 @@ struct LoadingView: View {
 
     var body: some View {
         ZStack {
-          /*  Image(backgroundImage)
-                .resizable()
-                .scaledToFill()
-                .ignoresSafeArea()
-                .blur(radius: isReady ? 0 : 18)
-                .scaleEffect(isReady ? 1 : 1.05)
-                .animation(.easeInOut(duration: 1.2), value: isReady)*/
 
             VStack(spacing: 12) {
                 Image(systemName: "cloud.sun.fill")

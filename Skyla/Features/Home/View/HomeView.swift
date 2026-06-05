@@ -12,7 +12,7 @@ struct HomeView: View {
     @StateObject var viewModel: HomeViewModel
     @EnvironmentObject var context: WeatherContext
     @Environment(\.scenePhase) private var scenePhase
-
+    @State private var didAppear = false
     var foregroundColor: Color {
         context.theme == .day ? .black : .white
     }
@@ -20,6 +20,7 @@ struct HomeView: View {
     var backgroundColor: Color {
         context.theme == .day ? .white : .black
     }
+  
 
 
     var body: some View {
@@ -28,7 +29,13 @@ struct HomeView: View {
                 backgroundImage
                 mainContent
             }
-            .onAppear(perform: onAppear)
+            .opacity(didAppear ? 1 : 0)
+            .offset(y: didAppear ? 0 : 20)
+            .animation(.easeOut(duration: 0.35), value: didAppear)
+            .onAppear {
+                onAppear()
+                didAppear = true
+            }
             .onChange(of: scenePhase, perform: onScenePhaseChange)
             .navigationDestination(item: $viewModel.selectedDay) { day in
                 DayDetailsView(viewModel: factory.makeDayDetailsViewModel(day: day))
