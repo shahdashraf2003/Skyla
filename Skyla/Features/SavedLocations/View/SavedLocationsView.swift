@@ -14,7 +14,6 @@ struct SavedLocationsView: View {
     @StateObject var viewModel: SavedLocationsViewModel
     @State private var locationToDelete: SavedLocation?
     @State private var didAppear = false
-
     let factory = AppContainer.shared.makeFactory()
 
     let onSelectLocation: (SavedLocation) -> Void

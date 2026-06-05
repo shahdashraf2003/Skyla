@@ -8,6 +8,7 @@
 
 import SwiftUI
 
+
 struct ExploreLocationsView: View {
 
     @StateObject var viewModel: ExploreLocationsViewModel
@@ -15,6 +16,7 @@ struct ExploreLocationsView: View {
     @EnvironmentObject var weatherContext: WeatherContext
 
     @State private var didAppear = false
+
     var foregroundColor: Color {
         weatherContext.theme == .day ? .black : .white
     }
@@ -22,12 +24,6 @@ struct ExploreLocationsView: View {
     var horizontalPadding: CGFloat {
         foregroundColor == .black ? 16 : 54
     }
-
-    private let columns = [
-        GridItem(.flexible()),
-        GridItem(.flexible()),
-        GridItem(.flexible())
-    ]
 
     var isSearching: Bool {
         !viewModel.query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -51,21 +47,29 @@ struct ExploreLocationsView: View {
 
                 if !isSearching {
                     ScrollView {
-                        LazyVGrid(columns: columns, spacing: 10) {
-                            ForEach(viewModel.suggested, id: \.self) { item in
-                                SuggestedCityCard(
-                                    title: item,
-                                    foregroundColor: foregroundColor
-                                ) {
-                                    withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                                        viewModel.selectSuggestedByName(item)
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("Popular cities")
+                                .font(.system(size: 14))
+                                .foregroundColor(foregroundColor)
+                                .padding(.horizontal, horizontalPadding)
+
+                            FlowLayout(spacing: 10) {
+                                ForEach(viewModel.suggested, id: \.self) { item in
+                                    SuggestedCityCard(
+                                        title: item,
+                                        foregroundColor: foregroundColor
+                                    ) {
+                                        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                                            viewModel.selectSuggestedByName(item)
+                                        }
                                     }
+                                    .transition(.scale.combined(with: .opacity))
                                 }
-                                .transition(.scale.combined(with: .opacity))
                             }
+                            .padding(.horizontal, horizontalPadding)
+                            .animation(.easeInOut(duration: 0.25), value: viewModel.suggested)
                         }
-                        .padding(.horizontal, horizontalPadding)
-                        .animation(.easeInOut(duration: 0.25), value: viewModel.suggested)
+                        .padding(.top, 4)
                     }
                     .scrollContentBackground(.hidden)
 
@@ -73,14 +77,13 @@ struct ExploreLocationsView: View {
 
                     ScrollView {
                         VStack(spacing: 12) {
+
                             if viewModel.isSearching {
-                               LoadingView(foregroundColor:foregroundColor)
-                                    .padding()
-                                    .padding(.top, 60)
+                                LoadingView(foregroundColor: foregroundColor)
+                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                                     .transition(.opacity)
                             }
 
-                          
                             else if viewModel.showNoInternet {
                                 NoInternetView(
                                     retry: { await viewModel.retrySearch() },
@@ -98,7 +101,6 @@ struct ExploreLocationsView: View {
                                 .transition(.opacity)
                             }
 
-                        
                             else {
                                 ForEach(viewModel.results) { item in
                                     CityResultCard(
@@ -122,7 +124,6 @@ struct ExploreLocationsView: View {
                     .scrollContentBackground(.hidden)
                 }
 
-             
                 if viewModel.isLoadingCity {
                     LoadingView(foregroundColor: foregroundColor)
                         .transition(.opacity)
@@ -134,9 +135,7 @@ struct ExploreLocationsView: View {
             .animation(.easeOut(duration: 0.35), value: didAppear)
         }
 
-        
         .toolbar {
-
             ToolbarItem(placement: .navigationBarLeading) {
                 Button {
                     dismiss()
@@ -155,8 +154,6 @@ struct ExploreLocationsView: View {
         }
 
         .navigationBarBackButtonHidden(true)
-
-        
         .onAppear {
             didAppear = true
         }

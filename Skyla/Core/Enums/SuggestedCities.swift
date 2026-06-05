@@ -45,10 +45,7 @@ enum SuggestedCities {
 
         "Paris",
         "Lyon",
-        "Marseille",
-        "Nice",
-        "Toulouse",
-
+        
         "Berlin",
         "Munich",
         "Hamburg",
@@ -63,108 +60,7 @@ enum SuggestedCities {
 
         "Madrid",
         "Barcelona",
-        "Valencia",
-        "Seville",
-        "Bilbao",
-
-        "Amsterdam",
-        "Rotterdam",
-        "The Hague",
-
-        "Brussels",
-        "Vienna",
-        "Prague",
-        "Budapest",
-        "Warsaw",
-
-        "Athens",
-        "Istanbul",
-        "Ankara",
-        "Izmir",
-
-        "Moscow",
-        "Saint Petersburg",
-
-        "New York",
-        "Los Angeles",
-        "Chicago",
-        "Miami",
-        "Houston",
-
-        "Seattle",
-        "Boston",
-        "Dallas",
-        "Atlanta",
-        "San Francisco",
-
-        "Toronto",
-        "Vancouver",
-        "Montreal",
-        "Ottawa",
-
-        "Mexico City",
-        "Cancun",
-        "Monterrey",
-
-        "Rio de Janeiro",
-        "Sao Paulo",
-        "Brasilia",
-
-        "Buenos Aires",
-        "Cordoba",
-
-        "Cape Town",
-        "Johannesburg",
-        "Durban",
-
-        "Casablanca",
-        "Rabat",
-        "Marrakesh",
-        "Tangier",
-
-        "Algiers",
-        "Oran",
-        "Tunis",
-
-        "Nairobi",
-        "Addis Ababa",
-
-        "Tokyo",
-        "Osaka",
-        "Kyoto",
-        "Nagoya",
-
-        "Seoul",
-        "Busan",
-
-        "Beijing",
-        "Shanghai",
-        "Shenzhen",
-        "Guangzhou",
-
-        "Hong Kong",
-        "Macau",
-
-        "Singapore",
-
-        "Bangkok",
-        "Phuket",
-        "Chiang Mai",
-
-        "Kuala Lumpur",
-        "Jakarta",
-        "Bali",
-
-        "Manila",
-        "Ho Chi Minh City",
-        "Hanoi",
-
-        "Sydney",
-        "Melbourne",
-        "Brisbane",
-        "Perth",
-
-        "Auckland",
-        "Wellington"
+       
+      
     ]
 }
