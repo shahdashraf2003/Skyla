@@ -28,12 +28,10 @@ struct SkylaApp: App {
     }()
 
     var body: some Scene {
-        WindowGroup {
+		WindowGroup {
 
-			HomeView(
-				viewModel: factory.makeHomeViewModel()
-			)
-			.environmentObject(weatherContext)
+			RootView(factory: factory)
+				.environmentObject(weatherContext)
 		}
         .modelContainer(sharedModelContainer)
     }
