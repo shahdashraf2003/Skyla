@@ -82,14 +82,14 @@ final class ExploreLocationsViewModel: ObservableObject {
         let location = SavedLocation(name: city.name, lat: city.lat, lon: city.lon, isCurrent: false)
         savedLocationRepository.addLocation(location)
         onAddToSaved?(city)
-        shouldDismiss = true
+        
     }
 
     func confirmViewWeather() {
         guard let city = selectedCity, let location = selectedLocation else { return }
         weatherContext.updateTime(location.localtime)
         onViewWeather?(city, location)
-        shouldDismiss = true
+       
     }
 
     func selectSuggestedByName(_ name: String) {

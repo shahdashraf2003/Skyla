@@ -190,13 +190,18 @@ struct HomeView: View {
     }
 
     private var savedLocationsDestination: some View {
-        SavedLocationsView(
-            viewModel: factory.makeSavedLocationsViewModel(),
-            onSelectLocation: viewModel.selectLocation,
-            onViewWeather: { city, _ in
-                viewModel.viewWeather(lat: city.lat, lon: city.lon, name: city.name)
-            }
-        )
+		SavedLocationsView(
+			closeSavedLocations: $viewModel.showSavedLocations, viewModel: factory
+				.makeSavedLocationsViewModel(),
+			onSelectLocation: viewModel.selectLocation,
+			onViewWeather: { city, _ in
+				viewModel.viewWeather(
+					lat: city.lat,
+					lon: city.lon,
+					name: city.name
+				)
+			}
+		)
     }
 
 

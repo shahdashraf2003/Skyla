@@ -154,13 +154,9 @@ struct ExploreLocationsView: View {
         }
 
         .navigationBarBackButtonHidden(true)
-        .onAppear {
-            didAppear = true
-        }
-
-        .onChange(of: viewModel.shouldDismiss) { _, value in
-            if value { dismiss() }
-        }
+		.onAppear {
+			didAppear = true
+		}
         .alert("Location", isPresented: $viewModel.showAddAlert) {
             Button("Add to Saved") { viewModel.confirmAddToSaved() }
             Button("View Weather") { viewModel.confirmViewWeather() }

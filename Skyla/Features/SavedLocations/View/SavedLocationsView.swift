@@ -10,7 +10,7 @@ struct SavedLocationsView: View {
 
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var weatherContext: WeatherContext
-
+	@Binding var closeSavedLocations: Bool
     @StateObject var viewModel: SavedLocationsViewModel
     @State private var locationToDelete: SavedLocation?
     @State private var didAppear = false
@@ -120,20 +120,15 @@ struct SavedLocationsView: View {
         vm.onAddToSaved = { [viewModel] city in
             let saved = viewModel.buildSavedLocation(from: city)
             onSelectLocation(saved)
+			dismiss()
 
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                dismiss()
-            }
         }
 
-        vm.onViewWeather = { city, location in
-            onViewWeather(city, location)
+		vm.onViewWeather = { city, location in
+			onViewWeather(city, location)
 
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                dismiss()
-            }
-        }
-
+			closeSavedLocations = false
+		}
         return ExploreLocationsView(viewModel: vm)
     }
 }
