@@ -4,6 +4,10 @@ A modern weather forecasting application built with **SwiftUI**, providing real-
 
 ---
 
+<p align="center"> <img src="screenshots/day.jpeg" width="200"> <img src="screenshots/night.jpeg" width="200"> 
+  <img src="screenshots/details.jpeg" width="200"> <img src="screenshots/saved.jpeg" width="200">
+ <img src="screenshots/explore.jpeg" width="200">   <img src="screenshots/search.jpeg" width="200">  </p>
+---
 ## 📱 Features
 
 ### 🏠 Home Screen
