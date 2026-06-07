@@ -1,4 +1,4 @@
-# 🌦️ WeatherCast App
+# 🌦️ Skyla App
 
 A modern weather forecasting application built with **SwiftUI**, providing real-time weather information, 3-day forecasts, hourly forecasts, and multi-location support.
 
