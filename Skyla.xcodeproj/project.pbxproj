@@ -6,13 +6,31 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		6D22B64F2FC78347003ED980 /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = 6D22B64E2FC78347003ED980 /* Kingfisher */; };
+		6DBF4F4D2FC84B5600BC62CB /* Swinject in Frameworks */ = {isa = PBXBuildFile; productRef = 6DBF4F4C2FC84B5600BC62CB /* Swinject */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		6DDACDDD2FC636F000ED8A6B /* Skyla.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Skyla.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		6DB3E5A52FD49867001493B2 /* Exceptions for "Skyla" folder in "Skyla" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 6DDACDDC2FC636F000ED8A6B /* Skyla */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		6DDACDDF2FC636F000ED8A6B /* Skyla */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				6DB3E5A52FD49867001493B2 /* Exceptions for "Skyla" folder in "Skyla" target */,
+			);
 			path = Skyla;
 			sourceTree = "<group>";
 		};
@@ -23,6 +41,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6D22B64F2FC78347003ED980 /* Kingfisher in Frameworks */,
+				6DBF4F4D2FC84B5600BC62CB /* Swinject in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,6 +85,8 @@
 			);
 			name = Skyla;
 			packageProductDependencies = (
+				6DBF4F4C2FC84B5600BC62CB /* Swinject */,
+				6D22B64E2FC78347003ED980 /* Kingfisher */,
 			);
 			productName = Skyla;
 			productReference = 6DDACDDD2FC636F000ED8A6B /* Skyla.app */;
@@ -94,6 +116,10 @@
 			);
 			mainGroup = 6DDACDD42FC636F000ED8A6B;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				6DBF4F4B2FC84B5600BC62CB /* XCRemoteSwiftPackageReference "Swinject" */,
+				6D22B64D2FC78347003ED980 /* XCRemoteSwiftPackageReference "Kingfisher" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 6DDACDDE2FC636F000ED8A6B /* Products */;
 			projectDirPath = "";
@@ -253,9 +279,11 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Skyla/Info.plist;
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "We need your location to display the weather of your location";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "We use your location to show local weather.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -284,9 +312,11 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Skyla/Info.plist;
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "We need your location to display the weather of your location";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "We use your location to show local weather.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -328,6 +358,38 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		6D22B64D2FC78347003ED980 /* XCRemoteSwiftPackageReference "Kingfisher" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/onevcat/Kingfisher.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 8.9.0;
+			};
+		};
+		6DBF4F4B2FC84B5600BC62CB /* XCRemoteSwiftPackageReference "Swinject" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Swinject/Swinject.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.10.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		6D22B64E2FC78347003ED980 /* Kingfisher */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6D22B64D2FC78347003ED980 /* XCRemoteSwiftPackageReference "Kingfisher" */;
+			productName = Kingfisher;
+		};
+		6DBF4F4C2FC84B5600BC62CB /* Swinject */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6DBF4F4B2FC84B5600BC62CB /* XCRemoteSwiftPackageReference "Swinject" */;
+			productName = Swinject;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 6DDACDD52FC636F000ED8A6B /* Project object */;
 }
