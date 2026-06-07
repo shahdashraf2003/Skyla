@@ -111,10 +111,12 @@ struct HomeView: View {
                     .transition(.opacity)
 
             case .noInternet:
+
                 NoInternetView(
                     retry: { await viewModel.refresh() },
                     foregroundColor: foregroundColor
                 )
+				.frame(maxWidth: .infinity, maxHeight: .infinity)
                 .transition(.opacity)
 
             case .error(let message):

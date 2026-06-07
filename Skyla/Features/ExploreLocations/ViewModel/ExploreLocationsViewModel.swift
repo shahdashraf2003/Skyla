@@ -47,15 +47,19 @@ final class ExploreLocationsViewModel: ObservableObject {
         fetchLocationDetails(for: city)
     }
 
-    func retrySearch() async {
-        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return }
-        await MainActor.run {
-            showNoInternet = false
-            isSearching = true
-        }
-        await performSearch(trimmed)
-    }
+	func retrySearch() async {
+
+		if let name = pendingSuggestedName {
+			await MainActor.run { showNoInternet = false }
+			selectSuggestedByName(name)
+			return
+		}
+
+		let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
+		guard !trimmed.isEmpty else { return }
+		await MainActor.run { showNoInternet = false }
+		await performSearch(trimmed)
+	}
 
     private func fetchLocationDetails(for city: City) {
         isLoadingCity = true
@@ -92,27 +96,30 @@ final class ExploreLocationsViewModel: ObservableObject {
        
     }
 
-    func selectSuggestedByName(_ name: String) {
-        Task {
-            do {
-                let data = try await repository.searchCities(query: name)
-                await MainActor.run {
-                    if let first = data.first {
-                        self.results = data
-                        self.query = name
-                        self.selectCity(first)
-                    }
-                }
-            } catch {
-                await MainActor.run {
-                    if case NetworkError.noInternet = error {
-                        self.showNoInternet = true
-                    }
-                }
-                print("Error selecting suggested:", error)
-            }
-        }
-    }
+	private var pendingSuggestedName: String?
+
+	func selectSuggestedByName(_ name: String) {
+		pendingSuggestedName = name
+		Task {
+			do {
+				let data = try await repository.searchCities(query: name)
+				await MainActor.run {
+					if let first = data.first {
+						self.results = data
+						self.query = name
+						self.selectCity(first)
+					}
+				}
+			} catch {
+				await MainActor.run {
+					if case NetworkError.noInternet = error {
+						self.showNoInternet = true
+					}
+				}
+			}
+		}
+	}
+
 
     private func loadSuggested() {
         suggested = SuggestedCities.cities

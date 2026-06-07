@@ -165,6 +165,18 @@ struct ExploreLocationsView: View {
             if let city = viewModel.selectedCity {
                 Text("What do you want to do with \(city.name)?")
             }
-        }
+		}.sheet(isPresented: $viewModel.showNoInternet) {
+			NoInternetView(
+				retry: {
+					await viewModel.retrySearch()
+					if !viewModel.showNoInternet {
+					
+						viewModel.showNoInternet = false
+					}
+				},
+				foregroundColor: .primary
+			)
+			.presentationDetents([.medium])
+		}
     }
 }
